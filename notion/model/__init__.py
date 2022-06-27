@@ -89,6 +89,11 @@ class Page(Block, ChildrenMixin, TitleMixin):
             }
         super().__init__(client, data)
 
+    @property
+    def parent(self) -> dict:
+        "Get the parent of the page."
+        return self._data["parent"]
+
     def delete(self):
         self._client.delete_page(self.id)
 
@@ -104,6 +109,15 @@ class ChildPage(Block):
     @property
     def title(self) -> str:
         return self._data["child_page"]["title"]
+
+    @property
+    def parent(self):
+        """Get the parent of the page.
+        
+        Since the ChildPage data itself does not contain the `parent` property, the full page must be retrieved first.
+        """
+        full_page = self._client.get_page(self.id)
+        return full_page.parent
 
     def delete(self):
         """Delete the ChildPage.

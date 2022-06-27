@@ -8,16 +8,18 @@ from notion.model import *
 
 
 load_env()
+TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]
+TEST_NOTION_PAGE = environ["TEST_NOTION_PAGE"]
 
 
 @fixture
 def client():
-    return NotionClient(environ["TEST_NOTION_TOKEN"])
+    return NotionClient(TEST_NOTION_TOKEN)
 
 
 @fixture
 def page(client):
-    return client.get_page(environ["TEST_NOTION_PAGE"])
+    return client.get_page(TEST_NOTION_PAGE)
 
 
 def test_creating_client(client):
@@ -59,6 +61,18 @@ def test_adding_children(page):
     assert all_children[3].text == "Some Text"
     assert all_children[4].title == "Sub Page"
     assert all_children[5].text == "Some Quote"
+
+
+def test_getting_parent(page):
+    """Test the parent property of pages.
+
+    Assert the two possible cases that
+    1. A page sits at the top-level as part of an workspace.
+    2. A page is a child of another page.
+    TODO: Add database parent as soon as database support is added.
+    """
+    assert page.parent == {"type": "workspace", "workspace": True}
+    assert page.children[4].parent == {"page_id": TEST_NOTION_PAGE, "type": "page_id"}
 
 
 def test_deleting_all_children(page):
