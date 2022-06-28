@@ -1,4 +1,5 @@
-from typing import List, Union
+from datetime import datetime
+from typing import List, Optional, Union
 
 
 def class_from_type_name(type_name: str):
@@ -10,6 +11,11 @@ def class_from_type_name(type_name: str):
         "heading_3": SubSubHeading,
         "quote": Quote,
     }[type_name]
+
+
+def parse_notion_datetime(datetime_str: str) -> datetime:
+    "Turn a Notion datetime string into a Python `datetime` object."
+    return datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%f%z")
 
 
 class ChildrenMixin:
@@ -60,6 +66,79 @@ class TitleMixin:
         self._data = new_data
 
 
+class Page(ChildrenMixin, TitleMixin):
+    def __init__(self, title: str = None, data=None, client=None):
+        if title:
+            data = {
+                "object": "page",
+                "properties": {
+                    "title": {"title": [{"text": {"content": title}}]},
+                },
+            }
+        self._client = client
+        self._data = data
+
+    @property
+    def object(self) -> str:
+        """Get the Notion object type of the page as a string.
+
+        Takes the value from the page's data while in practice it must always be `"page"`.
+        """
+        return self._data["object"]
+
+    @property
+    def id(self) -> str:
+        return self._data["id"]
+
+    @property
+    def created_time(self) -> datetime:
+        return parse_notion_datetime(self._data["created_time"])
+
+    @property
+    def created_by(self) -> dict:
+        """.
+
+        Example: {"object": "user","id": "45ee8d13-687b-47ce-a5ca-6e2e45548c4b"}
+        """
+        return self._data["created_by"]
+
+    @property
+    def last_edited_time(self) -> datetime:
+        return parse_notion_datetime(self._data["last_edited_time"])
+
+    @property
+    def last_edited_by(self) -> dict:
+        return self._data["created_by"]
+
+    @property
+    def archived(self) -> bool:
+        return self._data["archived"]
+
+    @property
+    def icon(self) -> Optional[dict]:
+        return self._data["icon"]
+
+    @property
+    def cover(self) -> Optional[dict]:
+        return self._data["cover"]
+
+    @property
+    def properties(self) -> dict:
+        return self._data["properties"]
+
+    @property
+    def parent(self) -> dict:
+        "Get the parent of the page."
+        return self._data["parent"]
+
+    @property
+    def url(self) -> str:
+        return self._data["url"]
+
+    def delete(self):
+        self._client.delete_page(self.id)
+
+
 class Block:
     def __init__(self, client=None, data=None):
         self._client = client
@@ -77,27 +156,6 @@ class Block:
         self._client.delete_block(self.id)
 
 
-# TODO: Pages are technically not Blocks. So model this in inheritance as well.
-class Page(Block, ChildrenMixin, TitleMixin):
-    def __init__(self, title: str = None, data=None, client=None):
-        if title:
-            data = {
-                "object": "page",
-                "properties": {
-                    "title": {"title": [{"text": {"content": title}}]},
-                },
-            }
-        super().__init__(client, data)
-
-    @property
-    def parent(self) -> dict:
-        "Get the parent of the page."
-        return self._data["parent"]
-
-    def delete(self):
-        self._client.delete_page(self.id)
-
-
 class ChildPage(Block):
     """A page contained in another page.
 
@@ -113,7 +171,7 @@ class ChildPage(Block):
     @property
     def parent(self):
         """Get the parent of the page.
-        
+
         Since the ChildPage data itself does not contain the `parent` property, the full page must be retrieved first.
         """
         full_page = self._client.get_page(self.id)
