@@ -40,9 +40,9 @@ def test_getting_test_page(page):
     assert page.title == "pythonic-notion-playground"
 
 
-def test_has_correct_properties(page):
+def test_page_has_correct_properties(page):
     """Check if the test page has all the correct properties.
-    
+
     Compare to https://developers.notion.com/reference/page
     """
     assert page.object == "page"
@@ -63,7 +63,7 @@ def test_has_correct_properties(page):
     assert page.url == f"https://www.notion.so/{page.title}-{page.id.replace('-', '')}"
 
 
-def test_page_has_no_block_children(page):
+def test_page_has_no_children(page):
     "At the beginning of the integration tests, the page should have no children."
     assert page.children == []
 
@@ -86,12 +86,41 @@ def test_adding_children(page):
     )
 
     all_children = page.children
-    assert all_children[0].text == "Heading 1"
-    assert all_children[1].text == "Heading 2"
-    assert all_children[2].text == "Heading 3"
-    assert all_children[3].text == "Some Text"
-    assert all_children[4].title == "Sub Page"
-    assert all_children[5].text == "Some Quote"
+    assert all_children[0].object == "block"
+    assert all_children[0].type == "heading_1"
+    assert all_children[1].object == "block"
+    assert all_children[1].type == "heading_2"
+    assert all_children[2].object == "block"
+    assert all_children[2].type == "heading_3"
+    assert all_children[3].object == "block"
+    assert all_children[3].type == "paragraph"
+    assert all_children[4].object == "block"
+    assert all_children[4].type == "child_page"
+    assert all_children[5].object == "block"
+    assert all_children[5].type == "quote"
+
+
+def test_heading_1_block_has_correct_properties(page):
+    """Check if the test block has all the correct properties.
+
+    Compare to https://developers.notion.com/reference/block
+    """
+    heading_1_block = page.children[0]
+    assert heading_1_block.object == "block"
+    assert is_valid_notion_id(heading_1_block.id)
+    assert heading_1_block.type == "heading_1"
+    # Exact datetime cannot be determined since every test run re-creates the block...
+    assert heading_1_block.created_time.tzinfo == timezone.utc
+    created_by_dict = heading_1_block.created_by
+    assert created_by_dict["object"] == "user"
+    assert is_valid_notion_id(created_by_dict["id"])
+    # Exact datetime cannot be determined since every test run re-creates the block...
+    assert heading_1_block.last_edited_time.tzinfo == timezone.utc
+    last_edited_by_dict = heading_1_block.last_edited_by
+    assert last_edited_by_dict["object"] == "user"
+    assert is_valid_notion_id(last_edited_by_dict["id"])
+    assert heading_1_block.archived == False
+    assert heading_1_block.has_children == False
 
 
 def test_getting_parent(page):

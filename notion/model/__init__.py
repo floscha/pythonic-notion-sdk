@@ -66,17 +66,10 @@ class TitleMixin:
         self._data = new_data
 
 
-class Page(ChildrenMixin, TitleMixin):
-    def __init__(self, title: str = None, data=None, client=None):
-        if title:
-            data = {
-                "object": "page",
-                "properties": {
-                    "title": {"title": [{"text": {"content": title}}]},
-                },
-            }
-        self._client = client
+class NotionObjectBase:
+    def __init__(self, data=None, client=None):
         self._data = data
+        self._client = client
 
     @property
     def object(self) -> str:
@@ -114,6 +107,18 @@ class Page(ChildrenMixin, TitleMixin):
     def archived(self) -> bool:
         return self._data["archived"]
 
+
+class Page(NotionObjectBase, ChildrenMixin, TitleMixin):
+    def __init__(self, title: str = None, data=None, client=None):
+        if title:
+            data = {
+                "object": "page",
+                "properties": {
+                    "title": {"title": [{"text": {"content": title}}]},
+                },
+            }
+        super().__init__(data, client)
+
     @property
     def icon(self) -> Optional[dict]:
         return self._data["icon"]
@@ -139,18 +144,14 @@ class Page(ChildrenMixin, TitleMixin):
         self._client.delete_page(self.id)
 
 
-class Block:
-    def __init__(self, client=None, data=None):
-        self._client = client
-        self._data = data
-
-    @property
-    def id(self) -> str:
-        return self._data["id"].replace("-", "")
-
+class Block(NotionObjectBase):
     @property
     def type(self) -> str:
         return self._data["type"]
+
+    @property
+    def has_children(self) -> bool:
+        return self._data["has_children"]
 
     def delete(self):
         self._client.delete_block(self.id)
@@ -198,7 +199,7 @@ class RichText(Block):
                 },
             }
 
-        super().__init__(client, data)
+        super().__init__(data, client)
 
     @property
     def text(self) -> str:
