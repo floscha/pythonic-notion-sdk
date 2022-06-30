@@ -6,7 +6,8 @@ from pydotenvs import load_env
 from pytest import fixture
 
 from notion import NotionClient
-from notion.model import *
+from notion.model.block import *
+from notion.model.page import *
 
 
 load_env()
