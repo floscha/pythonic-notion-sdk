@@ -1,6 +1,6 @@
-from notion.model.common import NotionObjectBase
+from typing import List, Optional, Union
 
-from typing import List, Union
+from notion.model.common import NotionObjectBase
 
 
 class Block(NotionObjectBase):
@@ -13,7 +13,7 @@ class Block(NotionObjectBase):
         return self._data["has_children"]
 
     def delete(self):
-        self._client.delete_block(self.id)
+        self._data = self._client.delete_block(self.id)
 
 
 class ChildPage(Block):
@@ -75,13 +75,17 @@ class ChildrenMixin:
         """
         if not isinstance(children, list):
             children = [children]
-        children = [c._data for c in children]
 
         res = []
-        for c in children:
+        for child in children:
+            c = child._data
             object_name = c["object"]
             if object_name == "block":
-                res.extend(self._client.append_block_children(self.id, [c]))
+                append_results = self._client.append_block_children(self.id, [c])
+                new_block = append_results["results"][0]
+                child._data = new_block
+                child._client = self._client
+                res.append(new_block)
             elif object_name == "page":
                 # TODO Also support database_id
                 c["parent"] = {"type": "page_id", "page_id": self.id}
@@ -144,3 +148,49 @@ class SubSubHeading(RichText):
 class Quote(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
         super().__init__("quote", text, data, client)
+
+
+class Callout(RichText, ChildrenMixin):
+    """A Notion Callout block.
+
+    See docs: https://developers.notion.com/reference/block#callout-blocks
+    TODO: Add support for `File Object` icons.
+    """
+
+    def __init__(
+        self,
+        text: str = None,
+        icon: str = None,
+        color: str = "default",
+        children: List[Block] = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": "callout",
+                "callout": {
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                    "icon": {"emoji": icon} if icon else None,
+                    "color": color,
+                    "children": [block._data for block in children] if children else [],
+                },
+            }
+        super().__init__(data=data, client=client)
+
+    @property
+    def icon(self) -> Optional[str]:
+        "TODO: Implement setter"
+        icon_dict = self._data["callout"].get("icon")
+        if icon_dict is None:
+            return None
+        elif "emoji" in icon_dict:
+            return icon_dict["emoji"]
+        else:
+            raise NotImplementedError("`File Object` icons are not implemented yet.")
+
+    @property
+    def color(self) -> str:
+        "TODO: Implement setter"
+        return self._data["callout"]["color"]

@@ -7,6 +7,7 @@ from pytest import fixture
 
 from notion import NotionClient
 from notion.model.block import *
+from notion.model.colors import Colors
 from notion.model.page import *
 
 
@@ -122,6 +123,20 @@ def test_heading_1_block_has_correct_properties(page):
     assert is_valid_notion_id(last_edited_by_dict["id"])
     assert heading_1_block.archived == False
     assert heading_1_block.has_children == False
+
+
+def test_callout_block(page):
+    callout = Callout("Some Text", "⭐", Colors.green, children=[Quote("Some Quote")])
+    page.append_children(callout)
+
+    assert is_valid_notion_id(callout.id)
+    assert callout.text == "Some Text"
+    assert callout.icon == "⭐"
+    assert callout.color == "green"
+    assert callout.has_children == True
+
+    callout.delete()
+    assert callout.archived == True
 
 
 def test_getting_parent(page):
