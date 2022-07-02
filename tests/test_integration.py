@@ -153,7 +153,10 @@ def test_getting_parent(page):
 
 def test_deleting_all_children(page):
     "Delete all children to provide a clean slate for future tests."
-    for child in page.children:
+    all_children = page.children
+    for child in all_children:
         child.delete()
-
+    
+    # assert len([child for child in all_children if child.archived == True ]) == len(all_children)
+    assert all(child.archived for child in all_children)
     assert len(page.children) == 0

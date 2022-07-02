@@ -42,7 +42,8 @@ class ChildPage(Block):
 
         Needs to be overwritten to use the `delete_page` endpoint instead of `delete_block`.
         """
-        self._client.delete_page(self.id)
+        deletion_result = self._client.delete_page(self.id)
+        self._data["archived"] = deletion_result["archived"]
 
 
 def block_class_from_type_name(type_name: str) -> Block:
