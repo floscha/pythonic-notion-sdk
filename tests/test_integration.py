@@ -139,6 +139,21 @@ def test_callout_block(page):
     assert callout.archived == True
 
 
+def test_code_block(page: Page):
+    code = Code("print('Hello World')")
+    page.append_children(code)
+
+    assert is_valid_notion_id(code.id)
+    assert code.text == "print('Hello World')"
+    assert code.language == "plain text"
+
+    code.language = "python"
+    assert code.language == "python"
+
+    code.delete()
+    assert code.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
@@ -156,7 +171,7 @@ def test_deleting_all_children(page):
     all_children = page.children
     for child in all_children:
         child.delete()
-    
+
     # assert len([child for child in all_children if child.archived == True ]) == len(all_children)
     assert all(child.archived for child in all_children)
     assert len(page.children) == 0

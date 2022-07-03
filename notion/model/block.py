@@ -195,3 +195,143 @@ class Callout(RichText, ChildrenMixin):
     def color(self) -> str:
         "TODO: Implement setter"
         return self._data["callout"]["color"]
+
+
+CODE_BLOCK_LANGUAGES = [
+    "abap",
+    "arduino",
+    "bash",
+    "basic",
+    "c",
+    "clojure",
+    "coffeescript",
+    "c++",
+    "c#",
+    "css",
+    "dart",
+    "diff",
+    "docker",
+    "elixir",
+    "elm",
+    "erlang",
+    "flow",
+    "fortran",
+    "f#",
+    "gherkin",
+    "glsl",
+    "go",
+    "graphql",
+    "groovy",
+    "haskell",
+    "html",
+    "java",
+    "javascript",
+    "json",
+    "julia",
+    "kotlin",
+    "latex",
+    "less",
+    "lisp",
+    "livescript",
+    "lua",
+    "makefile",
+    "markdown",
+    "markup",
+    "matlab",
+    "mermaid",
+    "nix",
+    "objective-c",
+    "ocaml",
+    "pascal",
+    "perl",
+    "php",
+    "plain text",
+    "powershell",
+    "prolog",
+    "protobuf",
+    "python",
+    "r",
+    "reason",
+    "ruby",
+    "rust",
+    "sass",
+    "scala",
+    "scheme",
+    "scss",
+    "shell",
+    "sql",
+    "swift",
+    "typescript",
+    "vb.net",
+    "verilog",
+    "vhdl",
+    "visual basic",
+    "webassembly",
+    "xml",
+    "yaml",
+    "java/c/c++/c#",
+]
+
+
+class Code(RichText):
+    """A Notion Code block.
+
+    See docs: https://developers.notion.com/reference/block#code-blocks
+    """
+
+    @staticmethod
+    def _check_language_is_valid(language: str):
+        if language not in CODE_BLOCK_LANGUAGES:
+            raise ValueError(
+                f"Language {language!r} is not supported by Notion Code blocks."
+            )
+
+    def __init__(
+        self,
+        text: str = None,
+        caption: str = None,
+        language: str = "plain text",
+        data: dict = None,
+        client=None,
+    ):
+        Code._check_language_is_valid(language)
+
+        if not data:
+            data = {
+                "object": "block",
+                "type": "code",
+                "code": {
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                    "language": language,
+                },
+            }
+            if caption is not None:
+                data["code"]["caption"] = [
+                    {"type": "text", "text": {"content": caption}}
+                ]
+
+        super().__init__(data=data, client=client)
+
+    @property
+    def caption(self) -> str:
+        return self._data[self.type]["caption"]
+
+    @caption.setter
+    def caption(self, new_caption: str):
+        Code._check_language_is_valid(new_caption)
+
+        new_data = self._client.update_block(
+            self.id, {self.type: {"rich_text": [{"text": {"content": new_caption}}]}}
+        )
+        self._data = new_data
+
+    @property
+    def language(self) -> str:
+        return self._data[self.type]["language"]
+
+    @language.setter
+    def language(self, new_language: str) -> str:
+        new_data = self._client.update_block(
+            self.id, {self.type: {"language": new_language}}
+        )
+        self._data = new_data
