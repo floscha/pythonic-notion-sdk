@@ -135,6 +135,11 @@ def test_callout_block(page):
     assert callout.color == "green"
     assert callout.has_children == True
 
+    callout.color = "red_background"
+    callout.icon = "🔥"
+    assert callout.color == "red_background"
+    assert callout.icon == "🔥"
+
     callout.delete()
     assert callout.archived == True
 

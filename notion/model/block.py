@@ -191,10 +191,21 @@ class Callout(RichText, ChildrenMixin):
         else:
             raise NotImplementedError("`File Object` icons are not implemented yet.")
 
+    @icon.setter
+    def icon(self, new_icon: str):
+        new_data = self._client.update_block(
+            self.id, {self.type: {"icon": {"emoji": new_icon}}}
+        )
+        self._data = new_data
+
     @property
     def color(self) -> str:
-        "TODO: Implement setter"
         return self._data["callout"]["color"]
+
+    @color.setter
+    def color(self, new_color: str):
+        new_data = self._client.update_block(self.id, {self.type: {"color": new_color}})
+        self._data = new_data
 
 
 CODE_BLOCK_LANGUAGES = [
