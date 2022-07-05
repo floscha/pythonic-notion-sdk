@@ -346,3 +346,15 @@ class Code(RichText):
             self.id, {self.type: {"language": new_language}}
         )
         self._data = new_data
+
+
+class Divider(Block):
+    def __init__(self, data: dict = None, client=None):
+        if not data:
+            data = {
+                "object": "block",
+                "type": "divider",
+                "divider": {},
+            }
+
+        super().__init__(data=data, client=client)

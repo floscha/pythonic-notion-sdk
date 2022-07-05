@@ -159,6 +159,16 @@ def test_code_block(page: Page):
     assert code.archived == True
 
 
+def test_divider_block(page: Page):
+    divider = Divider()
+    page.append_children(divider)
+
+    assert is_valid_notion_id(divider.id)
+
+    divider.delete()
+    assert divider.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
