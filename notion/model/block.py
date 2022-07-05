@@ -329,7 +329,6 @@ class Code(RichText):
 
     @caption.setter
     def caption(self, new_caption: str):
-        Code._check_language_is_valid(new_caption)
 
         new_data = self._client.update_block(
             self.id, {self.type: {"rich_text": [{"text": {"content": new_caption}}]}}
@@ -342,6 +341,8 @@ class Code(RichText):
 
     @language.setter
     def language(self, new_language: str) -> str:
+        Code._check_language_is_valid(new_language)
+
         new_data = self._client.update_block(
             self.id, {self.type: {"language": new_language}}
         )
