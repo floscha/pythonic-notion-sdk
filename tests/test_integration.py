@@ -169,6 +169,25 @@ def test_divider_block(page: Page):
     assert divider.archived == True
 
 
+def test_bookmark_block(page: Page):
+    bookmark = Bookmark(url="https://www.notion.so")
+    page.append_children(bookmark)
+
+    assert is_valid_notion_id(bookmark.id)
+    assert bookmark.url == "https://www.notion.so"
+    assert bookmark.caption is None
+
+    bookmark.url = "https://www.notion.so/blog"
+    bookmark.caption = "The Notion Blog"
+    assert bookmark.url == "https://www.notion.so/blog"
+    assert bookmark.caption == "The Notion Blog"
+
+    import time;time.sleep(10)
+
+    bookmark.delete()
+    assert bookmark.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

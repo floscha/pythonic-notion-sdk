@@ -359,3 +359,42 @@ class Divider(Block):
             }
 
         super().__init__(data=data, client=client)
+
+
+class Bookmark(Block):
+    def __init__(self, url: str = None, caption: str = None, data: dict = None, client=None):
+        if not data:
+            caption_data = [{"text": {"content": caption}}] if caption else []
+            data = {
+                "object": "block",
+                "type": "bookmark",
+                "bookmark": {"url": url, "caption": caption_data},
+            }
+
+        super().__init__(data=data, client=client)
+
+    @property
+    def url(self) -> str:
+        return self._data[self.type]["url"]
+
+    @url.setter
+    def url(self, new_url: str) -> str:
+        new_data = self._client.update_block(
+            self.id, {self.type: {"url": new_url}}
+        )
+        self._data = new_data
+
+    @property
+    def caption(self) -> str:
+        caption_data = self._data[self.type]["caption"]
+        if not caption_data:
+            return None
+
+        return caption_data[0]["text"]["content"]
+
+    @caption.setter
+    def caption(self, new_caption: str):
+        new_data = self._client.update_block(
+            self.id, {self.type: {"caption": [{"text": {"content": new_caption}}]}}
+        )
+        self._data = new_data
