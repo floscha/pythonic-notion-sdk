@@ -362,7 +362,9 @@ class Divider(Block):
 
 
 class Bookmark(Block):
-    def __init__(self, url: str = None, caption: str = None, data: dict = None, client=None):
+    def __init__(
+        self, url: str = None, caption: str = None, data: dict = None, client=None
+    ):
         if not data:
             caption_data = [{"text": {"content": caption}}] if caption else []
             data = {
@@ -379,9 +381,7 @@ class Bookmark(Block):
 
     @url.setter
     def url(self, new_url: str) -> str:
-        new_data = self._client.update_block(
-            self.id, {self.type: {"url": new_url}}
-        )
+        new_data = self._client.update_block(self.id, {self.type: {"url": new_url}})
         self._data = new_data
 
     @property
@@ -396,5 +396,40 @@ class Bookmark(Block):
     def caption(self, new_caption: str):
         new_data = self._client.update_block(
             self.id, {self.type: {"caption": [{"text": {"content": new_caption}}]}}
+        )
+        self._data = new_data
+
+
+def type_name_from_obj(obj) -> str:
+    type_name = {Image: "image"}.get(type(obj))
+    if type_name is None:
+        raise TypeError()
+    return type_name
+
+
+class Image(Block):
+    """A Notion Image block.
+
+    See docs: https://developers.notion.com/reference/block#image-blocks
+    """
+
+    def __init__(self, url: str = None, data: dict = None, client=None):
+        if not data:
+            data = {
+                "object": "block",
+                "type": "image",
+                "image": {"external": {"url": url}},
+            }
+
+        super().__init__(data=data, client=client)
+
+    @property
+    def url(self) -> str:
+        return self._data[self.type]["external"]["url"]
+
+    @url.setter
+    def url(self, new_url: str) -> str:
+        new_data = self._client.update_block(
+            self.id, {self.type: {"external": {"url": new_url}}}
         )
         self._data = new_data

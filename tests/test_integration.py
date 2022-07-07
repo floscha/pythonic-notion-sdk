@@ -182,10 +182,22 @@ def test_bookmark_block(page: Page):
     assert bookmark.url == "https://www.notion.so/blog"
     assert bookmark.caption == "The Notion Blog"
 
-    import time;time.sleep(10)
-
     bookmark.delete()
     assert bookmark.archived == True
+
+
+def test_image_block(page: Page):
+    image = Image("https://super.so/icon/dark/image.svg")
+    page.append_children(image)
+
+    assert is_valid_notion_id(image.id)
+    assert image.url == "https://super.so/icon/dark/image.svg"
+
+    image.url = "https://super.so/icon/dark/home.svg"
+    assert image.url == "https://super.so/icon/dark/home.svg"
+
+    image.delete()
+    assert image.archived == True
 
 
 def test_getting_parent(page):
