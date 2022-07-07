@@ -3,10 +3,29 @@ from typing import List, Optional, Union
 from notion.model.common import NotionObjectBase
 
 
+def type_name_from_object(object) -> str:
+    type_name = {
+        ChildPage: "child_page",
+        Paragraph: "paragraph",
+        Heading: "heading_1",
+        SubHeading: "heading_2",
+        SubSubHeading: "heading_3",
+        Quote: "quote",
+        Callout: "callout",
+        Code: "code",
+        Divider: "divider",
+        Bookmark: "bookmark",
+        Image: "image",
+    }.get(type(object))
+    if type_name is None:
+        raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
+    return type_name
+
+
 class Block(NotionObjectBase):
     @property
     def type(self) -> str:
-        return self._data["type"]
+        return type_name_from_object(self)
 
     @property
     def has_children(self) -> bool:
@@ -26,7 +45,8 @@ class ChildPage(Block):
 
     @property
     def title(self) -> str:
-        return self._data["child_page"]["title"]
+        # return self._data["child_page"]["title"]
+        return self._data[self.type]["title"]
 
     @property
     def parent(self):
@@ -100,16 +120,12 @@ class ChildrenMixin:
 
 
 class RichText(Block):
-    def __init__(
-        self, class_name: str = None, text: str = None, data=None, client=None
-    ) -> None:
-        if class_name and text:
+    def __init__(self, text: str = None, data=None, client=None) -> None:
+        if not data:
             data = {
                 "object": "block",
-                "type": class_name,
-                class_name: {
-                    "rich_text": [{"type": "text", "text": {"content": text}}]
-                },
+                "type": self.type,
+                self.type: {"rich_text": [{"type": "text", "text": {"content": text}}]},
             }
 
         super().__init__(data, client)
@@ -128,27 +144,27 @@ class RichText(Block):
 
 class Paragraph(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
-        super().__init__("paragraph", text, data, client)
+        super().__init__(text, data, client)
 
 
 class Heading(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
-        super().__init__("heading_1", text, data, client)
+        super().__init__(text, data, client)
 
 
 class SubHeading(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
-        super().__init__("heading_2", text, data, client)
+        super().__init__(text, data, client)
 
 
 class SubSubHeading(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
-        super().__init__("heading_3", text, data, client)
+        super().__init__(text, data, client)
 
 
 class Quote(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
-        super().__init__("quote", text, data, client)
+        super().__init__(text, data, client)
 
 
 class Callout(RichText, ChildrenMixin):
@@ -170,8 +186,8 @@ class Callout(RichText, ChildrenMixin):
         if not data:
             data = {
                 "object": "block",
-                "type": "callout",
-                "callout": {
+                "type": self.type,
+                self.type: {
                     "rich_text": [{"type": "text", "text": {"content": text}}],
                     "icon": {"emoji": icon} if icon else None,
                     "color": color,
@@ -183,7 +199,7 @@ class Callout(RichText, ChildrenMixin):
     @property
     def icon(self) -> Optional[str]:
         "TODO: Implement setter"
-        icon_dict = self._data["callout"].get("icon")
+        icon_dict = self._data[self.type].get("icon")
         if icon_dict is None:
             return None
         elif "emoji" in icon_dict:
@@ -200,7 +216,7 @@ class Callout(RichText, ChildrenMixin):
 
     @property
     def color(self) -> str:
-        return self._data["callout"]["color"]
+        return self._data[self.type]["color"]
 
     @color.setter
     def color(self, new_color: str):
@@ -310,14 +326,14 @@ class Code(RichText):
         if not data:
             data = {
                 "object": "block",
-                "type": "code",
-                "code": {
+                "type": self.type,
+                self.type: {
                     "rich_text": [{"type": "text", "text": {"content": text}}],
                     "language": language,
                 },
             }
             if caption is not None:
-                data["code"]["caption"] = [
+                data[self.type]["caption"] = [
                     {"type": "text", "text": {"content": caption}}
                 ]
 
@@ -354,8 +370,8 @@ class Divider(Block):
         if not data:
             data = {
                 "object": "block",
-                "type": "divider",
-                "divider": {},
+                "type": self.type,
+                self.type: {},
             }
 
         super().__init__(data=data, client=client)
@@ -369,8 +385,8 @@ class Bookmark(Block):
             caption_data = [{"text": {"content": caption}}] if caption else []
             data = {
                 "object": "block",
-                "type": "bookmark",
-                "bookmark": {"url": url, "caption": caption_data},
+                "type": self.type,
+                self.type: {"url": url, "caption": caption_data},
             }
 
         super().__init__(data=data, client=client)
@@ -400,13 +416,6 @@ class Bookmark(Block):
         self._data = new_data
 
 
-def type_name_from_obj(obj) -> str:
-    type_name = {Image: "image"}.get(type(obj))
-    if type_name is None:
-        raise TypeError()
-    return type_name
-
-
 class Image(Block):
     """A Notion Image block.
 
@@ -417,8 +426,8 @@ class Image(Block):
         if not data:
             data = {
                 "object": "block",
-                "type": "image",
-                "image": {"external": {"url": url}},
+                "type": self.type,
+                self.type: {"external": {"url": url}},
             }
 
         super().__init__(data=data, client=client)
