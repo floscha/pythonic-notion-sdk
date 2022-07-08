@@ -3,6 +3,29 @@ from typing import List, Optional, Union
 from notion.model.common import NotionObjectBase
 
 
+# ---------------------------------------------------------------------------
+# Base Class
+# ---------------------------------------------------------------------------
+
+
+class Block(NotionObjectBase):
+    @property
+    def type(self) -> str:
+        return type_name_from_object(self)
+
+    @property
+    def has_children(self) -> bool:
+        return self._data["has_children"]
+
+    def delete(self):
+        self._data = self._client.delete_block(self.id)
+
+
+# ---------------------------------------------------------------------------
+# Utils
+# ---------------------------------------------------------------------------
+
+
 def type_name_from_object(object) -> str:
     type_name = {
         ChildPage: "child_page",
@@ -22,50 +45,6 @@ def type_name_from_object(object) -> str:
     return type_name
 
 
-class Block(NotionObjectBase):
-    @property
-    def type(self) -> str:
-        return type_name_from_object(self)
-
-    @property
-    def has_children(self) -> bool:
-        return self._data["has_children"]
-
-    def delete(self):
-        self._data = self._client.delete_block(self.id)
-
-
-class ChildPage(Block):
-    """A page contained in another page.
-
-    From the Notion docs (https://developers.notion.com/docs/working-with-page-content#modeling-content-as-blocks):
-        When a child page appears inside another page, it's represented as a `child_page` block, which does not have children.
-        You should think of this as a reference to the page block.
-    """
-
-    @property
-    def title(self) -> str:
-        # return self._data["child_page"]["title"]
-        return self._data[self.type]["title"]
-
-    @property
-    def parent(self):
-        """Get the parent of the page.
-
-        Since the ChildPage data itself does not contain the `parent` property, the full page must be retrieved first.
-        """
-        full_page = self._client.get_page(self.id)
-        return full_page.parent
-
-    def delete(self):
-        """Delete the ChildPage.
-
-        Needs to be overwritten to use the `delete_page` endpoint instead of `delete_block`.
-        """
-        deletion_result = self._client.delete_page(self.id)
-        self._data["archived"] = deletion_result["archived"]
-
-
 def block_class_from_type_name(type_name: str) -> Block:
     type_class = {
         "child_page": ChildPage,
@@ -79,6 +58,11 @@ def block_class_from_type_name(type_name: str) -> Block:
     if type_class is None:
         raise TypeError(f"Block type {type_name!r} does not exist.")
     return type_class
+
+
+# ---------------------------------------------------------------------------
+# Mixins
+# ---------------------------------------------------------------------------
 
 
 class ChildrenMixin:
@@ -119,17 +103,7 @@ class ChildrenMixin:
         return res
 
 
-class RichText(Block):
-    def __init__(self, text: str = None, data=None, client=None) -> None:
-        if not data:
-            data = {
-                "object": "block",
-                "type": self.type,
-                self.type: {"rich_text": [{"type": "text", "text": {"content": text}}]},
-            }
-
-        super().__init__(data, client)
-
+class RichTextMixin:
     @property
     def text(self) -> str:
         return self._data[self.type]["rich_text"][0]["text"]["content"]
@@ -140,6 +114,113 @@ class RichText(Block):
             self.id, {self.type: {"rich_text": [{"text": {"content": new_text}}]}}
         )
         self._data = new_data
+
+
+class ColorMixin:
+    @property
+    def color(self) -> str:
+        return self._data[self.type]["color"]
+
+    @color.setter
+    def color(self, new_color: str):
+        new_data = self._client.update_block(self.id, {self.type: {"color": new_color}})
+        self._data = new_data
+
+
+class UrlMixin:
+    @property
+    def url(self) -> str:
+        return self._data[self.type]["url"]
+
+    @url.setter
+    def url(self, new_url: str) -> str:
+        new_data = self._client.update_block(self.id, {self.type: {"url": new_url}})
+        self._data = new_data
+
+
+class CaptionMixin:
+    @property
+    def caption(self) -> str:
+        caption_data = self._data[self.type]["caption"]
+        if not caption_data:
+            return None
+
+        return caption_data[0]["text"]["content"]
+
+    @caption.setter
+    def caption(self, new_caption: str):
+        new_data = self._client.update_block(
+            self.id, {self.type: {"caption": [{"text": {"content": new_caption}}]}}
+        )
+        self._data = new_data
+
+
+class IconMixin:
+    @property
+    def icon(self) -> Optional[str]:
+        "TODO: Implement setter"
+        icon_dict = self._data[self.type].get("icon")
+        if icon_dict is None:
+            return None
+        elif "emoji" in icon_dict:
+            return icon_dict["emoji"]
+        else:
+            raise NotImplementedError("`File Object` icons are not implemented yet.")
+
+    @icon.setter
+    def icon(self, new_icon: str):
+        new_data = self._client.update_block(
+            self.id, {self.type: {"icon": {"emoji": new_icon}}}
+        )
+        self._data = new_data
+
+
+# ---------------------------------------------------------------------------
+# Notion Block Implementations
+# ---------------------------------------------------------------------------
+
+
+class ChildPage(Block):
+    """A page contained in another page.
+
+    From the Notion docs (https://developers.notion.com/docs/working-with-page-content#modeling-content-as-blocks):
+        When a child page appears inside another page, it's represented as a `child_page` block, which does not have children.
+        You should think of this as a reference to the page block.
+    """
+
+    @property
+    def title(self) -> str:
+        # return self._data["child_page"]["title"]
+        return self._data[self.type]["title"]
+
+    @property
+    def parent(self):
+        """Get the parent of the page.
+
+        Since the ChildPage data itself does not contain the `parent` property, the full page must be retrieved first.
+        """
+        full_page = self._client.get_page(self.id)
+        return full_page.parent
+
+    def delete(self):
+        """Delete the ChildPage.
+
+        Needs to be overwritten to use the `delete_page` endpoint instead of `delete_block`.
+        """
+        deletion_result = self._client.delete_page(self.id)
+        self._data["archived"] = deletion_result["archived"]
+
+
+class RichText(Block, RichTextMixin):
+    def __init__(self, text: str = None, data=None, client=None) -> None:
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"rich_text": [{"type": "text", "text": {"content": text}}]},
+            }
+
+        super().__init__(data, client)
 
 
 class Paragraph(RichText):
@@ -167,7 +248,7 @@ class Quote(RichText):
         super().__init__(text, data, client)
 
 
-class Callout(RichText, ChildrenMixin):
+class Callout(RichText, IconMixin, ChildrenMixin, ColorMixin):
     """A Notion Callout block.
 
     See docs: https://developers.notion.com/reference/block#callout-blocks
@@ -195,33 +276,6 @@ class Callout(RichText, ChildrenMixin):
                 },
             }
         super().__init__(data=data, client=client)
-
-    @property
-    def icon(self) -> Optional[str]:
-        "TODO: Implement setter"
-        icon_dict = self._data[self.type].get("icon")
-        if icon_dict is None:
-            return None
-        elif "emoji" in icon_dict:
-            return icon_dict["emoji"]
-        else:
-            raise NotImplementedError("`File Object` icons are not implemented yet.")
-
-    @icon.setter
-    def icon(self, new_icon: str):
-        new_data = self._client.update_block(
-            self.id, {self.type: {"icon": {"emoji": new_icon}}}
-        )
-        self._data = new_data
-
-    @property
-    def color(self) -> str:
-        return self._data[self.type]["color"]
-
-    @color.setter
-    def color(self, new_color: str):
-        new_data = self._client.update_block(self.id, {self.type: {"color": new_color}})
-        self._data = new_data
 
 
 CODE_BLOCK_LANGUAGES = [
@@ -300,7 +354,7 @@ CODE_BLOCK_LANGUAGES = [
 ]
 
 
-class Code(RichText):
+class Code(RichText, CaptionMixin):
     """A Notion Code block.
 
     See docs: https://developers.notion.com/reference/block#code-blocks
@@ -340,18 +394,6 @@ class Code(RichText):
         super().__init__(data=data, client=client)
 
     @property
-    def caption(self) -> str:
-        return self._data[self.type]["caption"]
-
-    @caption.setter
-    def caption(self, new_caption: str):
-
-        new_data = self._client.update_block(
-            self.id, {self.type: {"rich_text": [{"text": {"content": new_caption}}]}}
-        )
-        self._data = new_data
-
-    @property
     def language(self) -> str:
         return self._data[self.type]["language"]
 
@@ -377,7 +419,7 @@ class Divider(Block):
         super().__init__(data=data, client=client)
 
 
-class Bookmark(Block):
+class Bookmark(Block, UrlMixin, CaptionMixin):
     def __init__(
         self, url: str = None, caption: str = None, data: dict = None, client=None
     ):
@@ -390,30 +432,6 @@ class Bookmark(Block):
             }
 
         super().__init__(data=data, client=client)
-
-    @property
-    def url(self) -> str:
-        return self._data[self.type]["url"]
-
-    @url.setter
-    def url(self, new_url: str) -> str:
-        new_data = self._client.update_block(self.id, {self.type: {"url": new_url}})
-        self._data = new_data
-
-    @property
-    def caption(self) -> str:
-        caption_data = self._data[self.type]["caption"]
-        if not caption_data:
-            return None
-
-        return caption_data[0]["text"]["content"]
-
-    @caption.setter
-    def caption(self, new_caption: str):
-        new_data = self._client.update_block(
-            self.id, {self.type: {"caption": [{"text": {"content": new_caption}}]}}
-        )
-        self._data = new_data
 
 
 class Image(Block):
