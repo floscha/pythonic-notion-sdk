@@ -78,9 +78,9 @@ def test_adding_children(page):
     """
     page.append_children(
         [
-            Heading("Heading 1"),
-            SubHeading("Heading 2"),
-            SubSubHeading("Heading 3"),
+            HeadingOne("Heading 1"),
+            HeadingTwo("Heading 2"),
+            HeadingThree("Heading 3"),
             Paragraph("Some Text"),
             Page("Sub Page"),
             Quote("Some Quote"),

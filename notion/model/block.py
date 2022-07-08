@@ -7,9 +7,9 @@ def type_name_from_object(object) -> str:
     type_name = {
         ChildPage: "child_page",
         Paragraph: "paragraph",
-        Heading: "heading_1",
-        SubHeading: "heading_2",
-        SubSubHeading: "heading_3",
+        HeadingOne: "heading_1",
+        HeadingTwo: "heading_2",
+        HeadingThree: "heading_3",
         Quote: "quote",
         Callout: "callout",
         Code: "code",
@@ -70,9 +70,9 @@ def block_class_from_type_name(type_name: str) -> Block:
     type_class = {
         "child_page": ChildPage,
         "paragraph": Paragraph,
-        "heading_1": Heading,
-        "heading_2": SubHeading,
-        "heading_3": SubSubHeading,
+        "heading_1": HeadingOne,
+        "heading_2": HeadingTwo,
+        "heading_3": HeadingThree,
         "quote": Quote,
     }.get(type_name)
 
@@ -147,17 +147,17 @@ class Paragraph(RichText):
         super().__init__(text, data, client)
 
 
-class Heading(RichText):
+class HeadingOne(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
         super().__init__(text, data, client)
 
 
-class SubHeading(RichText):
+class HeadingTwo(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
         super().__init__(text, data, client)
 
 
-class SubSubHeading(RichText):
+class HeadingThree(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
         super().__init__(text, data, client)
 
