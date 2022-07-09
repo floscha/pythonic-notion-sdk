@@ -39,6 +39,7 @@ def type_name_from_object(object) -> str:
         Divider: "divider",
         Bookmark: "bookmark",
         Image: "image",
+        BulletedListItem: "bulleted_list_item",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -53,6 +54,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "heading_2": HeadingTwo,
         "heading_3": HeadingThree,
         "quote": Quote,
+        "bulleted_list_item": BulletedListItem,
     }.get(type_name)
 
     if type_class is None:
@@ -101,6 +103,13 @@ class ChildrenMixin:
                 )
 
         return res
+
+    def delete(self):
+        # Apparently all children must be deleted first, before the block itself can be deleted.
+        for child in self.children:
+            child.delete()
+
+        super().delete()
 
 
 class RichTextMixin:
@@ -460,3 +469,25 @@ class Image(Block):
             self.id, {self.type: {"external": {"url": new_url}}}
         )
         self._data = new_data
+
+
+class BulletedListItem(Block, RichTextMixin, ColorMixin, ChildrenMixin):
+    """A Notion BulletedListItem block.
+
+    See docs: https://developers.notion.com/reference/block#bulleted-list-item-blocks
+    """
+
+    def __init__(
+        self, text: str = None, color: str = "default", data: dict = None, client=None
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                    "color": color,
+                },
+            }
+
+        super().__init__(data=data, client=client)

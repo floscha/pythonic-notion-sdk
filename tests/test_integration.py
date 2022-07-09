@@ -200,6 +200,25 @@ def test_image_block(page: Page):
     assert image.archived == True
 
 
+def test_bulleted_list_item_block(page: Page):
+    bulleted_list = BulletedListItem("Item B")
+    page.append_children(bulleted_list)
+
+    assert is_valid_notion_id(bulleted_list.id)
+    assert bulleted_list.text == "Item B"
+
+    bulleted_list.text = "Item A"
+    assert bulleted_list.text == "Item A"
+
+    bulleted_list.append_children(
+        [BulletedListItem("Item a"), BulletedListItem("Item b")]
+    )
+    assert [child.text for child in bulleted_list.children] == ["Item a", "Item b"]
+
+    bulleted_list.delete()
+    assert bulleted_list.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
