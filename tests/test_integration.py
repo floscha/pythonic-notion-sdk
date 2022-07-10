@@ -219,6 +219,25 @@ def test_bulleted_list_item_block(page: Page):
     assert bulleted_list.archived == True
 
 
+def test_numbered_list_item_block(page: Page):
+    numbered_list = NumberedListItem("Item B")
+    page.append_children(numbered_list)
+
+    assert is_valid_notion_id(numbered_list.id)
+    assert numbered_list.text == "Item B"
+
+    numbered_list.text = "Item A"
+    assert numbered_list.text == "Item A"
+
+    numbered_list.append_children(
+        [NumberedListItem("Item a"), NumberedListItem("Item b")]
+    )
+    assert [child.text for child in numbered_list.children] == ["Item a", "Item b"]
+
+    numbered_list.delete()
+    assert numbered_list.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

@@ -40,6 +40,7 @@ def type_name_from_object(object) -> str:
         Bookmark: "bookmark",
         Image: "image",
         BulletedListItem: "bulleted_list_item",
+        NumberedListItem: "numbered_list_item",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -55,6 +56,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "heading_3": HeadingThree,
         "quote": Quote,
         "bulleted_list_item": BulletedListItem,
+        "numbered_list_item": NumberedListItem,
     }.get(type_name)
 
     if type_class is None:
@@ -475,6 +477,28 @@ class BulletedListItem(Block, RichTextMixin, ColorMixin, ChildrenMixin):
     """A Notion BulletedListItem block.
 
     See docs: https://developers.notion.com/reference/block#bulleted-list-item-blocks
+    """
+
+    def __init__(
+        self, text: str = None, color: str = "default", data: dict = None, client=None
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                    "color": color,
+                },
+            }
+
+        super().__init__(data=data, client=client)
+
+
+class NumberedListItem(Block, RichTextMixin, ColorMixin, ChildrenMixin):
+    """A Notion NumberedListItem block.
+
+    See docs: https://developers.notion.com/reference/block#numbered-list-item-blocks
     """
 
     def __init__(
