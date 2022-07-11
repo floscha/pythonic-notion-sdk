@@ -41,6 +41,7 @@ def type_name_from_object(object) -> str:
         Image: "image",
         BulletedListItem: "bulleted_list_item",
         NumberedListItem: "numbered_list_item",
+        ToDo: "to_do",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -57,6 +58,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "quote": Quote,
         "bulleted_list_item": BulletedListItem,
         "numbered_list_item": NumberedListItem,
+        "to_do": ToDo,
     }.get(type_name)
 
     if type_class is None:
@@ -515,3 +517,74 @@ class NumberedListItem(Block, RichTextMixin, ColorMixin, ChildrenMixin):
             }
 
         super().__init__(data=data, client=client)
+
+
+class ToDo(Block, RichTextMixin, ColorMixin, ChildrenMixin):
+    """A Notion ToDo block.
+
+    See docs: https://developers.notion.com/reference/block#to-do-blocks
+    """
+
+    def __init__(
+        self,
+        text: str = None,
+        checked: bool = False,
+        color: str = "default",
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                    "checked": checked,
+                    "color": color,
+                },
+            }
+
+        super().__init__(data=data, client=client)
+
+    @property
+    def checked(self) -> bool:
+        return self._data[self.type]["checked"]
+
+    @checked.setter
+    def checked(self, new_checked: bool):
+        new_data = self._client.update_block(
+            self.id, {self.type: {"checked": new_checked}}
+        )
+        self._data = new_data
+
+    def check(self):
+        self.checked = True
+
+    def uncheck(self):
+        self.checked = False
+
+    def toggle_check(self):
+        if self.checked:
+            self.uncheck()
+        else:
+            self.check()
+
+    def check_all(self):
+        """Checks an ToDo block and all of its children.
+
+        Limitation: If the hierarchy is like ToDo -> BulletedListItem -> ToDo, the checking doesn't work.
+        """
+        self.check()
+        for child in self.children:
+            if isinstance(child, ToDo):
+                child.check_all()
+
+    def uncheck_all(self):
+        """Unchecks an ToDo block and all of its children.
+
+        Limitation: If the hierarchy is like ToDo -> BulletedListItem -> ToDo, the checking doesn't work.
+        """
+        self.uncheck()
+        for child in self.children:
+            if isinstance(child, ToDo):
+                child.uncheck_all()

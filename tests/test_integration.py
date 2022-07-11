@@ -238,13 +238,45 @@ def test_numbered_list_item_block(page: Page):
     assert numbered_list.archived == True
 
 
+def test_to_do_block(page: Page):
+    to_do = ToDo("Task 0")
+    page.append_children(to_do)
+
+    assert is_valid_notion_id(to_do.id)
+    assert to_do.text == "Task 0"
+
+    to_do.text = "Task 1"
+    assert to_do.text == "Task 1"
+
+    assert to_do.checked == False
+    to_do.checked = True
+    assert to_do.checked == True
+
+    to_do.uncheck()
+    assert to_do.checked == False
+    to_do.toggle_check()
+    assert to_do.checked == True
+    to_do.toggle_check()
+    assert to_do.checked == False
+
+    to_do.append_children(ToDo("Task 2"))
+    assert to_do.checked == False
+    assert to_do.children[0].checked == False
+    to_do.check_all()
+    assert to_do.checked == True
+    assert to_do.children[0].checked == True
+
+    to_do.delete()
+    assert to_do.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
     Assert the two possible cases that
     1. A page sits at the top-level as part of an workspace.
     2. A page is a child of another page.
-    TODO: Add database parent as soon as database support is added.
+    to_do: Add database parent as soon as database support is added.
     """
     assert page.parent == {"type": "workspace", "workspace": True}
     assert page.children[4].parent == {"page_id": TEST_NOTION_PAGE, "type": "page_id"}
