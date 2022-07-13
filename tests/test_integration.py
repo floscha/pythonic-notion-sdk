@@ -270,6 +270,20 @@ def test_to_do_block(page: Page):
     assert to_do.archived == True
 
 
+def test_toggle_block(page: Page):
+    toggle = Toggle("Toggle Text")
+    page.append_children(toggle)
+
+    assert is_valid_notion_id(toggle.id)
+    assert toggle.text == "Toggle Text"
+
+    toggle.append_children([Paragraph("Some unfoldable text")])
+    assert [child.text for child in toggle.children] == ["Some unfoldable text"]
+
+    toggle.delete()
+    assert toggle.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

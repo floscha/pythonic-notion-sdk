@@ -42,6 +42,7 @@ def type_name_from_object(object) -> str:
         BulletedListItem: "bulleted_list_item",
         NumberedListItem: "numbered_list_item",
         ToDo: "to_do",
+        Toggle: "toggle",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -59,6 +60,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "bulleted_list_item": BulletedListItem,
         "numbered_list_item": NumberedListItem,
         "to_do": ToDo,
+        "toggle": Toggle,
     }.get(type_name)
 
     if type_class is None:
@@ -588,3 +590,29 @@ class ToDo(Block, RichTextMixin, ColorMixin, ChildrenMixin):
         for child in self.children:
             if isinstance(child, ToDo):
                 child.uncheck_all()
+
+
+class Toggle(Block, RichTextMixin, ColorMixin, ChildrenMixin):
+    """A Notion Toggle block.
+
+    See docs: https://developers.notion.com/reference/block#toggle-blocks
+    """
+
+    def __init__(
+        self,
+        text: str = None,
+        color: str = "default",
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                    "color": color,
+                },
+            }
+
+        super().__init__(data=data, client=client)
