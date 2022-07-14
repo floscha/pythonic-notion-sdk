@@ -48,6 +48,7 @@ def type_name_from_object(object) -> str:
         Equation: "equation",
         Video: "video",
         File: "file",
+        PDF: "pdf",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -71,6 +72,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "equation": Equation,
         "video": Video,
         "file": File,
+        "pdf": PDF,
     }.get(type_name)
 
     if type_class is None:
@@ -742,6 +744,23 @@ class File(Block, ExternalFileMixin, CaptionMixin):
                 "object": "block",
                 "type": self.type,
                 self.type: {"external": {"url": url}, "caption": caption_data},
+            }
+
+        super().__init__(data=data, client=client)
+
+
+class PDF(Block, ExternalFileMixin):
+    """A Notion PDF block.
+
+    See docs: https://developers.notion.com/reference/block#pdf-blocks
+    """
+
+    def __init__(self, url: str = None, data: dict = None, client=None):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"external": {"url": url}},
             }
 
         super().__init__(data=data, client=client)
