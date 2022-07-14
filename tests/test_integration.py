@@ -366,6 +366,20 @@ def test_pdf_block(page: Page):
     assert pdf.archived == True
 
 
+def test_embed_block(page: Page):
+    embed = Embed("https://twitter.com/Jack/status/20")
+    page.append_children(embed)
+
+    assert is_valid_notion_id(embed.id)
+    assert embed.url == "https://twitter.com/Jack/status/20"
+
+    embed.url = "https://twitter.com/james_kpatrick/status/320150923336892416"
+    assert embed.url == "https://twitter.com/james_kpatrick/status/320150923336892416"
+
+    embed.delete()
+    assert embed.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

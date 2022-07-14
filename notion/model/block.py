@@ -50,6 +50,7 @@ def type_name_from_object(object) -> str:
         File: "file",
         PDF: "pdf",
         LinkPreview: "link_preview",
+        Embed: "embed",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -75,6 +76,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "file": File,
         "pdf": PDF,
         "link_preview": LinkPreview,
+        "embed": Embed,
     }.get(type_name)
 
     if type_class is None:
@@ -784,3 +786,19 @@ class LinkPreview(Block, UrlMixin):
             "LinkPreview blocks will only be returned as part of a response. It cannot be created via the API."
         )
 
+
+class Embed(Block, UrlMixin):
+    """A Notion Embed block.
+
+    See docs: https://developers.notion.com/reference/block#embed-blocks
+    """
+
+    def __init__(self, url: str = None, data: dict = None, client=None):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"url": url},
+            }
+
+        super().__init__(data=data, client=client)
