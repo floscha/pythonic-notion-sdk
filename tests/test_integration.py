@@ -308,6 +308,19 @@ def test_breadcrumb_block(page: Page):
     assert breadcrumb.archived == True
 
 
+def test_equation_block(page: Page):
+    equation = Equation("e=mc")
+    page.append_children(equation)
+
+    assert is_valid_notion_id(equation.id)
+
+    equation.expression = "e=mc^2"
+    assert equation.expression == "e=mc^2"
+
+    equation.delete()
+    assert equation.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

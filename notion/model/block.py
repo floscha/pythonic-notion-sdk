@@ -45,6 +45,7 @@ def type_name_from_object(object) -> str:
         Toggle: "toggle",
         TableOfContents: "table_of_contents",
         Breadcrumb: "breadcrumb",
+        Equation: "equation",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -65,6 +66,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "toggle": Toggle,
         "table_of_contents": TableOfContents,
         "breadcrumb": Breadcrumb,
+        "equation": Equation,
     }.get(type_name)
 
     if type_class is None:
@@ -667,3 +669,36 @@ class Breadcrumb(Block):
             }
 
         super().__init__(data=data, client=client)
+
+
+class Equation(Block):
+    """A Notion Equation block.
+
+    See docs: https://developers.notion.com/reference/block#equation-blocks
+    """
+
+    def __init__(
+        self,
+        expression: str = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"expression": expression},
+            }
+
+        super().__init__(data=data, client=client)
+
+    @property
+    def expression(self) -> str:
+        return self._data[self.type]["expression"]
+
+    @expression.setter
+    def expression(self, new_expression: str) -> str:
+        new_data = self._client.update_block(
+            self.id, {self.type: {"expression": new_expression}}
+        )
+        self._data = new_data
