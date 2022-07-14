@@ -284,6 +284,20 @@ def test_toggle_block(page: Page):
     assert toggle.archived == True
 
 
+def test_table_of_contents_block(page: Page):
+    toc = TableOfContents()
+    page.append_children(toc)
+
+    assert is_valid_notion_id(toc.id)
+    assert toc.color == "default"
+
+    toc.color = "red"
+    assert toc.color == "red"
+
+    toc.delete()
+    assert toc.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

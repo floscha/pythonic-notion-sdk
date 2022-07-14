@@ -43,6 +43,7 @@ def type_name_from_object(object) -> str:
         NumberedListItem: "numbered_list_item",
         ToDo: "to_do",
         Toggle: "toggle",
+        TableOfContents: "table_of_contents",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -61,6 +62,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "numbered_list_item": NumberedListItem,
         "to_do": ToDo,
         "toggle": Toggle,
+        "table_of_contents": TableOfContents,
     }.get(type_name)
 
     if type_class is None:
@@ -611,6 +613,31 @@ class Toggle(Block, RichTextMixin, ColorMixin, ChildrenMixin):
                 "type": self.type,
                 self.type: {
                     "rich_text": [{"type": "text", "text": {"content": text}}],
+                    "color": color,
+                },
+            }
+
+        super().__init__(data=data, client=client)
+
+
+class TableOfContents(Block, ColorMixin):
+
+    """A Notion Table Of Contents block.
+
+    See docs: https://developers.notion.com/reference/block#table-of-contents-blocks
+    """
+
+    def __init__(
+        self,
+        color: str = "default",
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
                     "color": color,
                 },
             }
