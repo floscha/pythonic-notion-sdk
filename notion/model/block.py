@@ -49,6 +49,7 @@ def type_name_from_object(object) -> str:
         Video: "video",
         File: "file",
         PDF: "pdf",
+        LinkPreview: "link_preview",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -73,6 +74,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "video": Video,
         "file": File,
         "pdf": PDF,
+        "link_preview": LinkPreview,
     }.get(type_name)
 
     if type_class is None:
@@ -764,3 +766,21 @@ class PDF(Block, ExternalFileMixin):
             }
 
         super().__init__(data=data, client=client)
+
+
+class LinkPreview(Block, UrlMixin):
+    """A Notion LinkPreview block.
+
+    NOTE: The link_preview block will only be returned as part of a response. It cannot be created via the API.
+    See docs: https://developers.notion.com/reference/block#link-preview-blocks
+    """
+
+    def __init__(self, data: dict = None, client=None):
+        super().__init__(data=data, client=client)
+
+    @UrlMixin.url.setter
+    def url(self, new_url):
+        raise TypeError(
+            "LinkPreview blocks will only be returned as part of a response. It cannot be created via the API."
+        )
+
