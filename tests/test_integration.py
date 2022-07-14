@@ -332,7 +332,24 @@ def test_video_block(page: Page):
     assert video.url == "https://website.domain/files/video.mov"
 
     video.delete()
-    assert video.archived == True
+    assert video.archived == Tru
+
+
+def test_file_block(page: Page):
+    file = File(url="https://website.domain/files/doc.txt")
+    page.append_children(file)
+
+    assert is_valid_notion_id(file.id)
+    assert file.url == "https://website.domain/files/doc.txt"
+    assert file.caption is None
+
+    file.url = "https://website.domain/files/doc2.txt"
+    file.caption = "The second doc"
+    assert file.url == "https://website.domain/files/doc2.txt"
+    assert file.caption == "The second doc"
+
+    file.delete()
+    assert file.archived == True
 
 
 def test_getting_parent(page):
