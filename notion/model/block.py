@@ -196,6 +196,19 @@ class IconMixin:
         self._data = new_data
 
 
+class ExternalFileMixin:
+    @property
+    def url(self) -> str:
+        return self._data[self.type]["external"]["url"]
+
+    @url.setter
+    def url(self, new_url: str) -> str:
+        new_data = self._client.update_block(
+            self.id, {self.type: {"external": {"url": new_url}}}
+        )
+        self._data = new_data
+
+
 # ---------------------------------------------------------------------------
 # Notion Block Implementations
 # ---------------------------------------------------------------------------
@@ -455,7 +468,7 @@ class Bookmark(Block, UrlMixin, CaptionMixin):
         super().__init__(data=data, client=client)
 
 
-class Image(Block):
+class Image(Block, ExternalFileMixin):
     """A Notion Image block.
 
     See docs: https://developers.notion.com/reference/block#image-blocks
@@ -470,17 +483,6 @@ class Image(Block):
             }
 
         super().__init__(data=data, client=client)
-
-    @property
-    def url(self) -> str:
-        return self._data[self.type]["external"]["url"]
-
-    @url.setter
-    def url(self, new_url: str) -> str:
-        new_data = self._client.update_block(
-            self.id, {self.type: {"external": {"url": new_url}}}
-        )
-        self._data = new_data
 
 
 class BulletedListItem(Block, RichTextMixin, ColorMixin, ChildrenMixin):
