@@ -308,6 +308,20 @@ def test_breadcrumb_block(page: Page):
     assert breadcrumb.archived == True
 
 
+def test_link_preview_block(page: Page):
+    link_preview = LinkPreview("https://notion.com/")
+    page.append_children(link_preview)
+
+    assert is_valid_notion_id(link_preview.id)
+    assert link_preview.url == "https://notion.com/"
+
+    # link_preview.url = "https://developers.notion.com/"
+    # assert link_preview.url == "https://developers.notion.com/"
+
+    # link_preview.delete()
+    # assert link_preview.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
