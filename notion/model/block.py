@@ -46,6 +46,7 @@ def type_name_from_object(object) -> str:
         TableOfContents: "table_of_contents",
         Breadcrumb: "breadcrumb",
         Equation: "equation",
+        Video: "video",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -67,6 +68,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "table_of_contents": TableOfContents,
         "breadcrumb": Breadcrumb,
         "equation": Equation,
+        "video": Video,
     }.get(type_name)
 
     if type_class is None:
@@ -704,3 +706,20 @@ class Equation(Block):
             self.id, {self.type: {"expression": new_expression}}
         )
         self._data = new_data
+
+
+class Video(Block, ExternalFileMixin):
+    """A Notion Video block.
+
+    See docs: https://developers.notion.com/reference/block#video-blocks
+    """
+
+    def __init__(self, url: str = None, data: dict = None, client=None):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"external": {"url": url}},
+            }
+
+        super().__init__(data=data, client=client)

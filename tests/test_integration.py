@@ -321,6 +321,20 @@ def test_equation_block(page: Page):
     assert equation.archived == True
 
 
+def test_video_block(page: Page):
+    video = Video("https://website.domain/files/video.mp4")
+    page.append_children(video)
+
+    assert is_valid_notion_id(video.id)
+    assert video.url == "https://website.domain/files/video.mp4"
+
+    video.url = "https://website.domain/files/video.mov"
+    assert video.url == "https://website.domain/files/video.mov"
+
+    video.delete()
+    assert video.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
