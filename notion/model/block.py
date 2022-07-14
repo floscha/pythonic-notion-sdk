@@ -44,6 +44,7 @@ def type_name_from_object(object) -> str:
         ToDo: "to_do",
         Toggle: "toggle",
         TableOfContents: "table_of_contents",
+        Breadcrumb: "breadcrumb",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -63,6 +64,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "to_do": ToDo,
         "toggle": Toggle,
         "table_of_contents": TableOfContents,
+        "breadcrumb": Breadcrumb,
     }.get(type_name)
 
     if type_class is None:
@@ -640,6 +642,28 @@ class TableOfContents(Block, ColorMixin):
                 self.type: {
                     "color": color,
                 },
+            }
+
+        super().__init__(data=data, client=client)
+
+
+class Breadcrumb(Block):
+
+    """A Notion Breadcrumb block.
+
+    See docs: https://developers.notion.com/reference/block#breadcrumb-blocks
+    """
+
+    def __init__(
+        self,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {},
             }
 
         super().__init__(data=data, client=client)

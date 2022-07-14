@@ -298,6 +298,16 @@ def test_table_of_contents_block(page: Page):
     assert toc.archived == True
 
 
+def test_breadcrumb_block(page: Page):
+    breadcrumb = Breadcrumb()
+    page.append_children(breadcrumb)
+
+    assert is_valid_notion_id(breadcrumb.id)
+
+    breadcrumb.delete()
+    assert breadcrumb.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
