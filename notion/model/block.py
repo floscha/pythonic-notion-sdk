@@ -51,6 +51,7 @@ def type_name_from_object(object) -> str:
         PDF: "pdf",
         LinkPreview: "link_preview",
         Embed: "embed",
+        Template: "template",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -77,6 +78,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "pdf": PDF,
         "link_preview": LinkPreview,
         "embed": Embed,
+        "template": Template,
     }.get(type_name)
 
     if type_class is None:
@@ -799,6 +801,25 @@ class Embed(Block, UrlMixin):
                 "object": "block",
                 "type": self.type,
                 self.type: {"url": url},
+            }
+
+        super().__init__(data=data, client=client)
+
+
+class Template(Block, RichTextMixin, ChildrenMixin):
+    """A Notion Template block.
+
+    See docs: https://developers.notion.com/reference/block#template-blocks
+    """
+
+    def __init__(self, text: str = None, data: dict = None, client=None):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                },
             }
 
         super().__init__(data=data, client=client)

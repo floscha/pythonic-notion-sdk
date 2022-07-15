@@ -380,6 +380,21 @@ def test_embed_block(page: Page):
     assert embed.archived == True
 
 
+def test_template_block(page: Page):
+    template = Template("Some test template")
+    page.append_children(template)
+
+    assert is_valid_notion_id(template.id)
+    assert template.text == "Some test template"
+    assert template.children == []
+
+    template.append_children([HeadingOne("Test heading"), Paragraph("Test text")])
+    assert [child.text for child in template.children] == ["Test heading", "Test text"]
+
+    template.delete()
+    assert template.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
