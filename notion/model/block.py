@@ -52,6 +52,7 @@ def type_name_from_object(object) -> str:
         LinkPreview: "link_preview",
         Embed: "embed",
         Template: "template",
+        LinkToPage: "link_to_page",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -79,6 +80,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "link_preview": LinkPreview,
         "embed": Embed,
         "template": Template,
+        "link_to_page": LinkToPage,
     }.get(type_name)
 
     if type_class is None:
@@ -823,3 +825,51 @@ class Template(Block, RichTextMixin, ChildrenMixin):
             }
 
         super().__init__(data=data, client=client)
+
+
+class UUIDv4(str):
+    pass
+
+
+class LinkToPage(Block):
+    """A Notion LinkToPage block.
+
+    NOTE: Once created, the `page_id` and `database_id` parameters are currently read-only.
+
+    See docs: https://developers.notion.com/reference/block#link-to-page-blocks
+    """
+
+    def __init__(
+        self,
+        page_id: Optional[UUIDv4] = None,
+        database_id: Optional[UUIDv4] = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            if not (page_id or database_id):
+                raise ValueError("Either `page_id` or `database_id` must be set.")
+            if page_id and database_id:
+                raise ValueError("Only one of `page_id` and `database_id` can be set.")
+
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {},
+            }
+            if page_id:
+                data[self.type]["type"] = "page_id"
+                data[self.type]["page_id"] = page_id
+            if database_id:
+                data[self.type]["type"] = "database_id"
+                data[self.type]["database_id"] = database_id
+
+        super().__init__(data=data, client=client)
+
+    @property
+    def page_id(self) -> UUIDv4:
+        return self._data[self.type].get("page_id")
+
+    @property
+    def database_id(self) -> UUIDv4:
+        return self._data[self.type].get("database_id")

@@ -395,6 +395,25 @@ def test_template_block(page: Page):
     assert template.archived == True
 
 
+def test_link_to_page_block(page: Page):
+    # First create a test page we can link to.
+    linkable_page = Page("Linkable Page")
+    page.append_children(linkable_page)
+    linkable_page = page.children[0]
+
+    link_to_page = LinkToPage(page_id=linkable_page.id)
+    page.append_children(link_to_page)
+
+    assert is_valid_notion_id(link_to_page.id)
+    assert link_to_page.page_id == linkable_page.id
+    assert link_to_page.database_id is None
+
+    linkable_page.delete()
+    assert linkable_page.archived == True
+    link_to_page.delete()
+    assert link_to_page.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
