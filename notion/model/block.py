@@ -53,6 +53,7 @@ def type_name_from_object(object) -> str:
         Embed: "embed",
         Template: "template",
         LinkToPage: "link_to_page",
+        SyncedBlock: "synced_block",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -81,6 +82,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "embed": Embed,
         "template": Template,
         "link_to_page": LinkToPage,
+        "synced_block": SyncedBlock,
     }.get(type_name)
 
     if type_class is None:
@@ -873,3 +875,46 @@ class LinkToPage(Block):
     @property
     def database_id(self) -> UUIDv4:
         return self._data[self.type].get("database_id")
+
+
+class SyncedBlock(Block, ChildrenMixin):
+    """A Notion SyncedBlock block.
+
+    Similar to the UI, there are two versions of a SyncedBlock:
+    1. The original block that was created first and doesn't yet sync with anything else.
+    2. The reference blocks that are synced to the original synced block.
+
+    See docs: https://developers.notion.com/reference/block#synced-block-blocks
+    """
+
+    def __init__(
+        self,
+        synced_from: Optional[UUIDv4] = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"synced_from": {}},
+            }
+            if synced_from:
+                data[self.type]["synced_from"] = {"block_id": synced_from}
+            else:
+                data[self.type]["synced_from"] = None
+
+        super().__init__(data=data, client=client)
+
+    @property
+    def synced_from(self) -> Optional[UUIDv4]:
+        synced_from_dict = self._data[self.type]["synced_from"]
+        if synced_from_dict:
+            return synced_from_dict["block_id"]
+        else:
+            return None
+
+    def append_children(self, children: Union[dict, List[dict]]):
+        if self.synced_from is not None:
+            raise TypeError("Only Original SyncedBlocks can hold children.")
+        return super().append_children(children)

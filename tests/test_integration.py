@@ -414,6 +414,32 @@ def test_link_to_page_block(page: Page):
     assert link_to_page.archived == True
 
 
+def test_synced_block_block(page: Page):
+    original_synced_block = SyncedBlock()
+    page.append_children(original_synced_block)
+    original_synced_block = page.children[0]
+    original_synced_block.append_children(
+        [Paragraph("Paragraph 1"), Paragraph("Paragraph 2")]
+    )
+
+    assert is_valid_notion_id(original_synced_block.id)
+    assert len(original_synced_block.children) == 2
+
+    reference_synced_block = SyncedBlock(original_synced_block.id)
+    page.append_children(reference_synced_block)
+
+    assert is_valid_notion_id(reference_synced_block.id)
+    assert [child.text for child in reference_synced_block.children] == [
+        "Paragraph 1",
+        "Paragraph 2",
+    ]
+
+    original_synced_block.delete()
+    assert original_synced_block.archived == True
+    reference_synced_block.delete()
+    assert reference_synced_block.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 
