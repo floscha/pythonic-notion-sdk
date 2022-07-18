@@ -399,7 +399,11 @@ def test_link_to_page_block(page: Page):
     # First create a test page we can link to.
     linkable_page = Page("Linkable Page")
     page.append_children(linkable_page)
-    linkable_page = page.children[0]
+    linkable_page = [
+        child
+        for child in page.children
+        if isinstance(child, ChildPage) and child.title == "Linkable Page"
+    ][0]
 
     link_to_page = LinkToPage(page_id=linkable_page.id)
     page.append_children(link_to_page)
@@ -417,7 +421,9 @@ def test_link_to_page_block(page: Page):
 def test_synced_block_block(page: Page):
     original_synced_block = SyncedBlock()
     page.append_children(original_synced_block)
-    original_synced_block = page.children[0]
+    original_synced_block = [
+        child for child in page.children if isinstance(child, SyncedBlock)
+    ][0]
     original_synced_block.append_children(
         [Paragraph("Paragraph 1"), Paragraph("Paragraph 2")]
     )
