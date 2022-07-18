@@ -107,7 +107,7 @@ class ChildrenMixin:
             for data in self._client.retrieve_block_children(self.id)["results"]
         ]
 
-    def append_children(self, children: Union[dict, List[dict]]):
+    def append_children(self, children: Union[dict, List[dict]]) -> List[dict]:
         """Append blocks or pages to a parent.
 
         TODO: Instead of appending items one by one, batch blocks to be more efficient.
@@ -117,18 +117,17 @@ class ChildrenMixin:
 
         res = []
         for child in children:
-            c = child.to_dict()
-            object_name = c["object"]
+            object_name = child._data["object"]
             if object_name == "block":
-                append_results = self._client.append_block_children(self.id, [c])
+                append_results = self._client.append_block_children(self.id, [child.to_dict()])
                 new_block = append_results["results"][0]
                 child._data = new_block
                 child._client = self._client
                 res.append(new_block)
             elif object_name == "page":
                 # TODO Also support database_id
-                c["parent"] = {"type": "page_id", "page_id": self.id}
-                res.append(self._client.create_page(c))
+                child._data["parent"] = {"type": "page_id", "page_id": self.id}
+                res.append(self._client.create_page(child._data))
             else:
                 raise TypeError(
                     f"Appending objects of type {object_name} is not supported."
