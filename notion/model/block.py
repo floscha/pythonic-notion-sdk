@@ -55,7 +55,7 @@ def type_name_from_object(object) -> str:
         LinkToPage: "link_to_page",
         SyncedBlock: "synced_block",
         Column: "column",
-        ColumnList: "column_list"
+        ColumnList: "column_list",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -86,7 +86,7 @@ def block_class_from_type_name(type_name: str) -> Block:
         "link_to_page": LinkToPage,
         "synced_block": SyncedBlock,
         "column": Column,
-        "column_list": ColumnList
+        "column_list": ColumnList,
     }.get(type_name)
 
     if type_class is None:
@@ -119,7 +119,9 @@ class ChildrenMixin:
         for child in children:
             object_name = child._data["object"]
             if object_name == "block":
-                append_results = self._client.append_block_children(self.id, [child.to_dict()])
+                append_results = self._client.append_block_children(
+                    self.id, [child.to_dict()]
+                )
                 new_block = append_results["results"][0]
                 child._data = new_block
                 child._client = self._client
@@ -280,6 +282,7 @@ class Paragraph(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
         super().__init__(text, data, client)
 
+
 class HeadingOne(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
         super().__init__(text, data, client)
@@ -324,7 +327,7 @@ class Callout(RichText, IconMixin, ChildrenMixin, ColorMixin):
                     "rich_text": [{"type": "text", "text": {"content": text}}],
                     "icon": {"emoji": icon} if icon else None,
                     "color": color,
-                    "children": children
+                    "children": children,
                 },
             }
         super().__init__(data=data, client=client)
@@ -962,7 +965,6 @@ class ColumnList(Block, ChildrenMixin):
                 "object": "block",
                 "type": self.type,
                 self.type: {"children": children},
-                
             }
         super().__init__(data=data, client=client)
 
