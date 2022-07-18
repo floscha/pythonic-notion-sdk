@@ -461,6 +461,27 @@ def test_column_blocks(page: Page):
     assert column_list.archived == True
 
 
+def test_table_blocks(page: Page):
+    table = Table(
+        table_width=2,
+        children=[
+            TableRow(cells=["Cell 1", "Cell 2"]),
+            TableRow(cells=["Cell 3", "Cell 4"]),
+        ],
+    )
+    page.append_children(table)
+
+    assert is_valid_notion_id(table.id)
+    assert len(table.children) == 2
+    assert all(is_valid_notion_id(row.id) for row in table.rows)
+    assert table.rows[0].cells == ["Cell 1", "Cell 2"]
+    assert table.rows[1].cells == ["Cell 3", "Cell 4"]
+    assert table.cells == [["Cell 1", "Cell 2"], ["Cell 3", "Cell 4"]]
+
+    table.delete()
+    assert table.archived == True
+
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

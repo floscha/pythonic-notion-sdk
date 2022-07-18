@@ -56,6 +56,8 @@ def type_name_from_object(object) -> str:
         SyncedBlock: "synced_block",
         Column: "column",
         ColumnList: "column_list",
+        Table: "table",
+        TableRow: "table_row",
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -87,6 +89,8 @@ def block_class_from_type_name(type_name: str) -> Block:
         "synced_block": SyncedBlock,
         "column": Column,
         "column_list": ColumnList,
+        "table": Table,
+        "table_row": TableRow,
     }.get(type_name)
 
     if type_class is None:
@@ -975,3 +979,72 @@ class ColumnList(Block, ChildrenMixin):
 
     def __getitem__(self, index: int) -> Column:
         return self.children[index]
+
+
+class TableRow(Block):
+    """A Notion TableRow block.
+
+    See docs: https://developers.notion.com/reference/block#table-row-blocks
+    """
+
+    def __init__(
+        self,
+        cells: Optional[List] = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            assert isinstance(cells, list)
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
+                    "cells": [
+                        [{"type": "text", "text": {"content": cell_text}}]
+                        for cell_text in cells
+                    ]
+                },
+            }
+        super().__init__(data=data, client=client)
+
+    @property
+    def cells(self) -> List[str]:
+        return [c[0]["text"]["content"] for c in self._data[self.type]["cells"]]
+
+
+class Table(Block, ChildrenMixin):
+    """A Notion Table block.
+
+    See docs: https://developers.notion.com/reference/block#table-blocks
+    """
+
+    def __init__(
+        self,
+        table_width: Optional[int] = None,
+        has_column_header: Optional[bool] = False,
+        has_row_header: Optional[bool] = False,
+        children: Optional[List[Column]] = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            assert isinstance(children, list)
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {
+                    "table_width": table_width,
+                    "has_column_header": has_column_header,
+                    "has_row_header": has_row_header,
+                    "children": children,
+                },
+            }
+        super().__init__(data=data, client=client)
+
+    @property
+    def rows(self) -> List[TableRow]:
+        return self.children
+
+    @property
+    def cells(self) -> List[List[str]]:
+        return [row.cells for row in self.rows]
