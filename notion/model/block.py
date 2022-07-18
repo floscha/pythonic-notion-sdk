@@ -113,7 +113,7 @@ class ChildrenMixin:
 
         res = []
         for child in children:
-            c = child._data
+            c = child.to_dict()
             object_name = c["object"]
             if object_name == "block":
                 append_results = self._client.append_block_children(self.id, [c])

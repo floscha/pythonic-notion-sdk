@@ -46,3 +46,9 @@ class NotionObjectBase:
     @property
     def archived(self) -> bool:
         return self._data["archived"]
+
+    def to_dict(self) -> dict:
+        res = self._data.copy()
+        if "children" in res[self.type]:
+            res[self.type]["children"] = [child.to_dict() for child in res[self.type]["children"]]
+        return res
