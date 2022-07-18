@@ -440,6 +440,21 @@ def test_synced_block_block(page: Page):
     assert reference_synced_block.archived == True
 
 
+def test_column_blocks(page: Page):
+    column_list = ColumnList([Column([Paragraph(f"Column {i}")]) for i in (1, 2)])
+    page.append_children(column_list)
+
+    assert is_valid_notion_id(column_list.id)
+    columns = column_list.children
+    assert len(columns) == 2
+    assert all(isinstance(col, Column) for col in columns)
+    assert all(is_valid_notion_id(col.id) for col in columns)
+    assert all(col.children[0].text == f"Column {i+1}" for i, col in enumerate(columns))
+    
+    column_list.delete()
+    assert column_list.archived == True
+    
+
 def test_getting_parent(page):
     """Test the parent property of pages.
 

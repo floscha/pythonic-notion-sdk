@@ -54,6 +54,8 @@ def type_name_from_object(object) -> str:
         Template: "template",
         LinkToPage: "link_to_page",
         SyncedBlock: "synced_block",
+        Column: "column",
+        ColumnList: "column_list"
     }.get(type(object))
     if type_name is None:
         raise TypeError(f"Block type {str(type(object))!r} is not supported by Notion.")
@@ -83,6 +85,8 @@ def block_class_from_type_name(type_name: str) -> Block:
         "template": Template,
         "link_to_page": LinkToPage,
         "synced_block": SyncedBlock,
+        "column": Column,
+        "column_list": ColumnList
     }.get(type_name)
 
     if type_class is None:
@@ -276,7 +280,6 @@ class RichText(Block, RichTextMixin):
 class Paragraph(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
         super().__init__(text, data, client)
-
 
 class HeadingOne(RichText):
     def __init__(self, text: str = None, data=None, client=None) -> None:
@@ -918,3 +921,56 @@ class SyncedBlock(Block, ChildrenMixin):
         if self.synced_from is not None:
             raise TypeError("Only Original SyncedBlocks can hold children.")
         return super().append_children(children)
+
+
+class Column(Block, ChildrenMixin):
+    """A Notion Column block.
+
+    See docs: https://developers.notion.com/reference/block#column-list-and-column-blocks
+    """
+
+    def __init__(
+        self,
+        children: Optional[List[Block]] = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            assert isinstance(children, list)
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"children": children},
+            }
+        super().__init__(data=data, client=client)
+
+
+class ColumnList(Block, ChildrenMixin):
+    """A Notion ColumnList block.
+
+    See docs: https://developers.notion.com/reference/block#column-list-and-column-blocks
+    """
+
+    def __init__(
+        self,
+        children: Optional[List[Column]] = None,
+        data: dict = None,
+        client=None,
+    ):
+        if not data:
+            assert isinstance(children, list)
+            data = {
+                "object": "block",
+                "type": self.type,
+                self.type: {"children": children},
+                
+            }
+        super().__init__(data=data, client=client)
+
+    def append_children(self, children: Union[dict, List[dict]]):
+        if not all(isinstance(child, Column) for child in children):
+            raise TypeError("ColumnLists can only have Column objects as children.")
+        return super().append_children(children)
+
+    def __getitem__(self, index: int) -> Column:
+        return self.children[index]
