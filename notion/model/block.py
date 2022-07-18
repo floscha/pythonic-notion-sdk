@@ -312,7 +312,7 @@ class Callout(RichText, IconMixin, ChildrenMixin, ColorMixin):
         text: str = None,
         icon: str = None,
         color: str = "default",
-        children: List[Block] = None,
+        children: List[Block] = [],
         data: dict = None,
         client=None,
     ):
@@ -324,7 +324,7 @@ class Callout(RichText, IconMixin, ChildrenMixin, ColorMixin):
                     "rich_text": [{"type": "text", "text": {"content": text}}],
                     "icon": {"emoji": icon} if icon else None,
                     "color": color,
-                    "children": [block._data for block in children] if children else [],
+                    "children": children
                 },
             }
         super().__init__(data=data, client=client)
