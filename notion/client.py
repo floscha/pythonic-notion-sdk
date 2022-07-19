@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -35,22 +35,35 @@ class NotionClient:
 
         return response.json()
 
+    def _paginate(
+        self,
+        request_type: str,
+        entity: str,
+        payload: Optional[Dict[str, Any]] = None,
+        limit: Optional[int] = None,
+    ) -> list:
+        if payload is None:
+            payload = {}
+
+        results = []
+        start_cursor = {}
+        has_more = True
+        while has_more and (not limit or len(results) < limit):
+            result_set = self._make_request(
+                request_type, entity, {**payload, **start_cursor}
+            )
+            results.extend(result_set["results"])
+            start_cursor = {"start_cursor": result_set.get("next_cursor")}
+            has_more = result_set.get("has_more", False)
+
+        return results[:limit]
+
     # ---------------------------------------------------------------------------
     # Pages
     # ---------------------------------------------------------------------------
 
     def get_pages(self, database_id, filter_: Optional[dict] = None):
-        results = []
-        start_cursor = {}
-        while True:  # FIXME: Find a better way than while True?!
-            result_set = self._make_request(
-                "post", f"databases/{database_id}/query", {**filter_, **start_cursor}
-            )
-            results.extend(result_set["results"])
-            start_cursor = {"start_cursor": result_set.get("next_cursor")}
-            if not result_set.get("has_more"):
-                break
-        return results
+        return self._paginate("post", f"databases/{database_id}/query", filter_)
 
     def get_page(self, page_id):
         data = self._make_request("get", f"pages/{page_id}")
@@ -91,3 +104,20 @@ class NotionClient:
         The Notion API does not offer a DELETE method but insteads works by setting the `archived` field.
         """
         return self.update_block(block_id, {"archived": True})
+
+    def search(
+        self,
+        query: str,
+        sort: dict = None,
+        filter: Optional[dict] = None,
+        limit: Optional[int] = None,
+    ) -> Page:
+        "Search for Notion pages in all workspaces and databases."
+        payload = {"query": query}
+        if sort:
+            payload["sort"] = sort
+        if filter:
+            payload["filter"] = filter
+
+        results = self._paginate("post", "search", payload, limit)
+        return [Page(data=p, client=self) for p in results]
