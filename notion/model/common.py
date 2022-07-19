@@ -1,8 +1,19 @@
+import re
 from datetime import datetime
 
 
+def is_valid_notion_id(id_str: str) -> bool:
+    id_regex = r"^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$"
+    match = re.search(id_regex, id_str)
+    return bool(match)
+
+
 class UUIDv4(str):
-    pass
+    def __init__(self, str_):
+        if not is_valid_notion_id(str_):
+            raise ValueError(f"{str_!r} is not a valid Notion ID.")
+
+        super(str_)
 
 
 def parse_notion_datetime(datetime_str: str) -> datetime:

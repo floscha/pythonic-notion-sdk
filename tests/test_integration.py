@@ -1,4 +1,3 @@
-import re
 from datetime import datetime, timezone
 from os import environ
 
@@ -7,6 +6,7 @@ from pytest import fixture
 
 from notion import NotionClient
 from notion.model.block import *
+from notion.model.common import is_valid_notion_id
 from notion.model.colors import Colors
 from notion.model.page import *
 
@@ -24,12 +24,6 @@ def client():
 @fixture
 def page(client):
     return client.get_page(TEST_NOTION_PAGE)
-
-
-def is_valid_notion_id(id_str: str) -> bool:
-    id_regex = r"^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$"
-    match = re.search(id_regex, id_str)
-    return bool(match)
 
 
 def test_creating_client(client):
