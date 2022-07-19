@@ -1,6 +1,10 @@
 from datetime import datetime
 
 
+class UUIDv4(str):
+    pass
+
+
 def parse_notion_datetime(datetime_str: str) -> datetime:
     "Turn a Notion datetime string into a Python `datetime` object."
     return datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%f%z")

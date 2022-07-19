@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from notion.model.common import NotionObjectBase
+from notion.model.common import NotionObjectBase, UUIDv4
 
 
 # ---------------------------------------------------------------------------
@@ -841,10 +841,6 @@ class Template(Block, RichTextMixin, ChildrenMixin):
             }
 
         super().__init__(data=data, client=client)
-
-
-class UUIDv4(str):
-    pass
 
 
 class LinkToPage(Block):
