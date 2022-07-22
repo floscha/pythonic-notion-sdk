@@ -19,3 +19,12 @@ class UUIDv4(str):
             raise ValueError(f"{value!r} is not a valid Notion ID.")
 
         return str.__new__(cls, value)
+
+
+def class_name_as_snake_case(class_: object) -> str:
+    """Returns the class name of an object as a snake case string.
+
+    Regex taken from StackOverflow:
+        https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
+    """
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", type(class_).__name__).lower()
