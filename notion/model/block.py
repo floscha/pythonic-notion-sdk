@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
-from notion.model.common import NotionObjectBase, UUIDv4
-
+from notion.model.common.notion_object_base import NotionObjectBase
+from notion.model.common.utils import UUIDv4
 
 # ---------------------------------------------------------------------------
 # Base Class
@@ -20,6 +20,14 @@ class Block(NotionObjectBase):
     def delete(self):
         self._data = self._client.delete_block(self.id)
 
+    def to_json(self) -> dict:
+        res = self._data.copy()
+        if "children" in res[self.type]:
+            res[self.type]["children"] = [
+                child.to_json() for child in res[self.type]["children"]
+            ]
+        return res
+
 
 # ---------------------------------------------------------------------------
 # Utils
@@ -29,6 +37,7 @@ class Block(NotionObjectBase):
 def type_name_from_object(object) -> str:
     type_name = {
         ChildPage: "child_page",
+        ChildDatabase: "child_database",
         Paragraph: "paragraph",
         HeadingOne: "heading_1",
         HeadingTwo: "heading_2",
@@ -67,6 +76,7 @@ def type_name_from_object(object) -> str:
 def block_class_from_type_name(type_name: str) -> Block:
     type_class = {
         "child_page": ChildPage,
+        "child_database": ChildDatabase,
         "paragraph": Paragraph,
         "heading_1": HeadingOne,
         "heading_2": HeadingTwo,
@@ -129,7 +139,7 @@ class ChildrenMixin:
             object_name = child._data["object"]
             if object_name == "block":
                 append_results = self._client.append_block_children(
-                    self.id, [child.to_dict()]
+                    self.id, [child.to_json()]
                 )
                 new_block = append_results["results"][0]
                 child._data = new_block
@@ -244,17 +254,11 @@ class ExternalFileMixin:
 # ---------------------------------------------------------------------------
 
 
-class ChildPage(Block):
-    """A page contained in another page.
-
-    From the Notion docs (https://developers.notion.com/docs/working-with-page-content#modeling-content-as-blocks):
-        When a child page appears inside another page, it's represented as a `child_page` block, which does not have children.
-        You should think of this as a reference to the page block.
-    """
+class Child(Block):
+    "A block contained in another page."
 
     @property
     def title(self) -> str:
-        # return self._data["child_page"]["title"]
         return self._data[self.type]["title"]
 
     @property
@@ -266,12 +270,33 @@ class ChildPage(Block):
         full_page = self._client.get_page(self.id)
         return full_page.parent
 
+
+class ChildPage(Child):
+    """A page contained in another page.
+
+    From the Notion docs (https://developers.notion.com/docs/working-with-page-content#modeling-content-as-blocks):
+        When a child page appears inside another page, it's represented as a `child_page` block, which does not have children.
+        You should think of this as a reference to the page block.
+    """
+
     def delete(self):
-        """Delete the ChildPage.
+        """Delete the `ChildPage` in Notion.
 
         Needs to be overwritten to use the `delete_page` endpoint instead of `delete_block`.
         """
         deletion_result = self._client.delete_page(self.id)
+        self._data["archived"] = deletion_result["archived"]
+
+
+class ChildDatabase(Child):
+    "A database contained in another page."
+
+    def delete(self):
+        """Delete the `ChildDatabase` in Notion.
+
+        Needs to be overwritten to use the `delete_database` endpoint instead of `delete_block`.
+        """
+        deletion_result = self._client.delete_database(self.id)
         self._data["archived"] = deletion_result["archived"]
 
 

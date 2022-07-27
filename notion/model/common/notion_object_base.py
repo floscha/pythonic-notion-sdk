@@ -1,5 +1,7 @@
 from datetime import datetime
+from typing import Union
 
+from notion.model.common.parent import Parent, ParentPage
 from notion.model.common.utils import parse_notion_datetime
 
 
@@ -7,6 +9,10 @@ class NotionObjectBase:
     def __init__(self, data=None, client=None):
         self._data = data
         self._client = client
+
+    def with_client(self, client) -> "NotionObjectBase":
+        self._client = client
+        return self
 
     @property
     def object(self) -> str:
@@ -19,6 +25,17 @@ class NotionObjectBase:
     @property
     def id(self) -> str:
         return self._data["id"]
+
+    @property
+    def parent(self) -> Parent:
+        return Parent.from_json(self._data)
+
+    @parent.setter
+    def parent(self, new_parent: Union[ParentPage, str]):
+        if isinstance(new_parent, str):
+            new_parent = ParentPage(new_parent)
+
+        self._data["parent"] = new_parent.to_json()
 
     @property
     def created_time(self) -> datetime:
@@ -43,11 +60,3 @@ class NotionObjectBase:
     @property
     def archived(self) -> bool:
         return self._data["archived"]
-
-    def to_dict(self) -> dict:
-        res = self._data.copy()
-        if "children" in res[self.type]:
-            res[self.type]["children"] = [
-                child.to_dict() for child in res[self.type]["children"]
-            ]
-        return res

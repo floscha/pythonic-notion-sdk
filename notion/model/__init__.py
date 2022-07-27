@@ -1,2 +1,2 @@
-from notion.model.block import *
-from notion.model.page import *
+from notion.model.databases import Database
+from notion.model.page import Page

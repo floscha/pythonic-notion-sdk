@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Dict, Optional, Union
 
 from notion.model.block import ChildrenMixin
-from notion.model.common import NotionObjectBase
+from notion.model.common.notion_object_base import NotionObjectBase
+from notion.model.databases.properties import Property
 
 
 def find_title_property_name(page: "Page") -> str:
@@ -39,6 +40,7 @@ class Page(NotionObjectBase, ChildrenMixin, TitleMixin):
         self,
         title: str = None,
         title_property_name: str = "title",
+        properties: Optional[Dict[str, Union[Property, dict]]] = None,
         data=None,
         client=None,
     ):
@@ -49,6 +51,12 @@ class Page(NotionObjectBase, ChildrenMixin, TitleMixin):
                     title_property_name: {"title": [{"text": {"content": title}}]},
                 },
             }
+        if properties:
+            for property_name, property in properties.items():
+                if isinstance(property, Property):
+                    property = property.to_json()
+                data["properties"][property_name] = property
+
         super().__init__(data, client)
 
     @property
@@ -64,13 +72,29 @@ class Page(NotionObjectBase, ChildrenMixin, TitleMixin):
         return self._data["properties"]
 
     @property
-    def parent(self) -> dict:
-        "Get the parent of the page."
-        return self._data["parent"]
-
-    @property
     def url(self) -> str:
         return self._data["url"]
 
     def delete(self):
-        self._client.delete_page(self.id)
+        if self._client is None:
+            raise Exception(
+                "Page has not been created in Notion yet and therefore cannot be deleted."
+            )
+        else:
+            new_data = self._client.delete_page(self.id)
+            self._data = new_data
+
+    @staticmethod
+    def from_json(data: dict) -> "Page":
+        new_page = Page()
+        new_page._data = data
+        return new_page
+
+    def to_json(self) -> dict:
+        return self._data.copy()
+
+    def __str__(self) -> str:
+        return f"Page(Title: {self.title!r}, ID: {self.id!r})"
+
+    def __repr__(self) -> str:
+        return str(self)

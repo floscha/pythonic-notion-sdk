@@ -5,11 +5,11 @@ from pydotenvs import load_env
 from pytest import fixture
 
 from notion import NotionClient
-from notion.model.block import *
-from notion.model.common import is_valid_notion_id
+from notion.model import block as blocks
 from notion.model.colors import Colors
-from notion.model.page import *
-
+from notion.model.common import is_valid_notion_id
+from notion.model.common.parent import ParentPage, ParentWorkspace
+from notion.model.page import Page
 
 load_env()
 TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]
@@ -72,12 +72,12 @@ def test_adding_children(page):
     """
     page.append_children(
         [
-            HeadingOne("Heading 1"),
-            HeadingTwo("Heading 2"),
-            HeadingThree("Heading 3"),
-            Paragraph("Some Text"),
+            blocks.HeadingOne("Heading 1"),
+            blocks.HeadingTwo("Heading 2"),
+            blocks.HeadingThree("Heading 3"),
+            blocks.Paragraph("Some Text"),
             Page("Sub Page"),
-            Quote("Some Quote"),
+            blocks.Quote("Some Quote"),
         ]
     )
 
@@ -120,7 +120,9 @@ def test_heading_1_block_has_correct_properties(page):
 
 
 def test_callout_block(page):
-    callout = Callout("Some Text", "⭐", Colors.green, children=[Quote("Some Quote")])
+    callout = blocks.Callout(
+        "Some Text", "⭐", Colors.green, children=[blocks.Quote("Some Quote")]
+    )
     page.append_children(callout)
 
     assert is_valid_notion_id(callout.id)
@@ -139,7 +141,7 @@ def test_callout_block(page):
 
 
 def test_code_block(page: Page):
-    code = Code("print('Hello World')")
+    code = blocks.Code("print('Hello World')")
     page.append_children(code)
 
     assert is_valid_notion_id(code.id)
@@ -154,7 +156,7 @@ def test_code_block(page: Page):
 
 
 def test_divider_block(page: Page):
-    divider = Divider()
+    divider = blocks.Divider()
     page.append_children(divider)
 
     assert is_valid_notion_id(divider.id)
@@ -164,7 +166,7 @@ def test_divider_block(page: Page):
 
 
 def test_bookmark_block(page: Page):
-    bookmark = Bookmark(url="https://www.notion.so")
+    bookmark = blocks.Bookmark(url="https://www.notion.so")
     page.append_children(bookmark)
 
     assert is_valid_notion_id(bookmark.id)
@@ -181,7 +183,7 @@ def test_bookmark_block(page: Page):
 
 
 def test_image_block(page: Page):
-    image = Image("https://super.so/icon/dark/image.svg")
+    image = blocks.Image("https://super.so/icon/dark/image.svg")
     page.append_children(image)
 
     assert is_valid_notion_id(image.id)
@@ -195,7 +197,7 @@ def test_image_block(page: Page):
 
 
 def test_bulleted_list_item_block(page: Page):
-    bulleted_list = BulletedListItem("Item B")
+    bulleted_list = blocks.BulletedListItem("Item B")
     page.append_children(bulleted_list)
 
     assert is_valid_notion_id(bulleted_list.id)
@@ -205,7 +207,7 @@ def test_bulleted_list_item_block(page: Page):
     assert bulleted_list.text == "Item A"
 
     bulleted_list.append_children(
-        [BulletedListItem("Item a"), BulletedListItem("Item b")]
+        [blocks.BulletedListItem("Item a"), blocks.BulletedListItem("Item b")]
     )
     assert [child.text for child in bulleted_list.children] == ["Item a", "Item b"]
 
@@ -214,7 +216,7 @@ def test_bulleted_list_item_block(page: Page):
 
 
 def test_numbered_list_item_block(page: Page):
-    numbered_list = NumberedListItem("Item B")
+    numbered_list = blocks.NumberedListItem("Item B")
     page.append_children(numbered_list)
 
     assert is_valid_notion_id(numbered_list.id)
@@ -224,7 +226,7 @@ def test_numbered_list_item_block(page: Page):
     assert numbered_list.text == "Item A"
 
     numbered_list.append_children(
-        [NumberedListItem("Item a"), NumberedListItem("Item b")]
+        [blocks.NumberedListItem("Item a"), blocks.NumberedListItem("Item b")]
     )
     assert [child.text for child in numbered_list.children] == ["Item a", "Item b"]
 
@@ -233,7 +235,7 @@ def test_numbered_list_item_block(page: Page):
 
 
 def test_to_do_block(page: Page):
-    to_do = ToDo("Task 0")
+    to_do = blocks.ToDo("Task 0")
     page.append_children(to_do)
 
     assert is_valid_notion_id(to_do.id)
@@ -253,7 +255,7 @@ def test_to_do_block(page: Page):
     to_do.toggle_check()
     assert to_do.checked == False
 
-    to_do.append_children(ToDo("Task 2"))
+    to_do.append_children(blocks.ToDo("Task 2"))
     assert to_do.checked == False
     assert to_do.children[0].checked == False
     to_do.check_all()
@@ -265,13 +267,13 @@ def test_to_do_block(page: Page):
 
 
 def test_toggle_block(page: Page):
-    toggle = Toggle("Toggle Text")
+    toggle = blocks.Toggle("Toggle Text")
     page.append_children(toggle)
 
     assert is_valid_notion_id(toggle.id)
     assert toggle.text == "Toggle Text"
 
-    toggle.append_children([Paragraph("Some unfoldable text")])
+    toggle.append_children([blocks.Paragraph("Some unfoldable text")])
     assert [child.text for child in toggle.children] == ["Some unfoldable text"]
 
     toggle.delete()
@@ -279,7 +281,7 @@ def test_toggle_block(page: Page):
 
 
 def test_table_of_contents_block(page: Page):
-    toc = TableOfContents()
+    toc = blocks.TableOfContents()
     page.append_children(toc)
 
     assert is_valid_notion_id(toc.id)
@@ -293,7 +295,7 @@ def test_table_of_contents_block(page: Page):
 
 
 def test_breadcrumb_block(page: Page):
-    breadcrumb = Breadcrumb()
+    breadcrumb = blocks.Breadcrumb()
     page.append_children(breadcrumb)
 
     assert is_valid_notion_id(breadcrumb.id)
@@ -303,7 +305,7 @@ def test_breadcrumb_block(page: Page):
 
 
 def test_equation_block(page: Page):
-    equation = Equation("e=mc")
+    equation = blocks.Equation("e=mc")
     page.append_children(equation)
 
     assert is_valid_notion_id(equation.id)
@@ -316,7 +318,7 @@ def test_equation_block(page: Page):
 
 
 def test_video_block(page: Page):
-    video = Video("https://website.domain/files/video.mp4")
+    video = blocks.Video("https://website.domain/files/video.mp4")
     page.append_children(video)
 
     assert is_valid_notion_id(video.id)
@@ -330,7 +332,7 @@ def test_video_block(page: Page):
 
 
 def test_file_block(page: Page):
-    file = File(url="https://website.domain/files/doc.txt")
+    file = blocks.File(url="https://website.domain/files/doc.txt")
     page.append_children(file)
 
     assert is_valid_notion_id(file.id)
@@ -347,7 +349,7 @@ def test_file_block(page: Page):
 
 
 def test_pdf_block(page: Page):
-    pdf = PDF("https://website.domain/files/doc.pdf")
+    pdf = blocks.PDF("https://website.domain/files/doc.pdf")
     page.append_children(pdf)
 
     assert is_valid_notion_id(pdf.id)
@@ -361,7 +363,7 @@ def test_pdf_block(page: Page):
 
 
 def test_embed_block(page: Page):
-    embed = Embed("https://twitter.com/Jack/status/20")
+    embed = blocks.Embed("https://twitter.com/Jack/status/20")
     page.append_children(embed)
 
     assert is_valid_notion_id(embed.id)
@@ -375,14 +377,16 @@ def test_embed_block(page: Page):
 
 
 def test_template_block(page: Page):
-    template = Template("Some test template")
+    template = blocks.Template("Some test template")
     page.append_children(template)
 
     assert is_valid_notion_id(template.id)
     assert template.text == "Some test template"
     assert template.children == []
 
-    template.append_children([HeadingOne("Test heading"), Paragraph("Test text")])
+    template.append_children(
+        [blocks.HeadingOne("Test heading"), blocks.Paragraph("Test text")]
+    )
     assert [child.text for child in template.children] == ["Test heading", "Test text"]
 
     template.delete()
@@ -396,10 +400,10 @@ def test_link_to_page_block(page: Page):
     linkable_page = [
         child
         for child in page.children
-        if isinstance(child, ChildPage) and child.title == "Linkable Page"
+        if isinstance(child, blocks.ChildPage) and child.title == "Linkable Page"
     ][0]
 
-    link_to_page = LinkToPage(page_id=linkable_page.id)
+    link_to_page = blocks.LinkToPage(page_id=linkable_page.id)
     page.append_children(link_to_page)
 
     assert is_valid_notion_id(link_to_page.id)
@@ -413,19 +417,19 @@ def test_link_to_page_block(page: Page):
 
 
 def test_synced_block_block(page: Page):
-    original_synced_block = SyncedBlock()
+    original_synced_block = blocks.SyncedBlock()
     page.append_children(original_synced_block)
     original_synced_block = [
-        child for child in page.children if isinstance(child, SyncedBlock)
+        child for child in page.children if isinstance(child, blocks.SyncedBlock)
     ][0]
     original_synced_block.append_children(
-        [Paragraph("Paragraph 1"), Paragraph("Paragraph 2")]
+        [blocks.Paragraph("Paragraph 1"), blocks.Paragraph("Paragraph 2")]
     )
 
     assert is_valid_notion_id(original_synced_block.id)
     assert len(original_synced_block.children) == 2
 
-    reference_synced_block = SyncedBlock(original_synced_block.id)
+    reference_synced_block = blocks.SyncedBlock(original_synced_block.id)
     page.append_children(reference_synced_block)
 
     assert is_valid_notion_id(reference_synced_block.id)
@@ -441,13 +445,15 @@ def test_synced_block_block(page: Page):
 
 
 def test_column_blocks(page: Page):
-    column_list = ColumnList([Column([Paragraph(f"Column {i}")]) for i in (1, 2)])
+    column_list = blocks.ColumnList(
+        [blocks.Column([blocks.Paragraph(f"Column {i}")]) for i in (1, 2)]
+    )
     page.append_children(column_list)
 
     assert is_valid_notion_id(column_list.id)
     columns = column_list.children
     assert len(columns) == 2
-    assert all(isinstance(col, Column) for col in columns)
+    assert all(isinstance(col, blocks.Column) for col in columns)
     assert all(is_valid_notion_id(col.id) for col in columns)
     assert all(col.children[0].text == f"Column {i+1}" for i, col in enumerate(columns))
 
@@ -456,11 +462,11 @@ def test_column_blocks(page: Page):
 
 
 def test_table_blocks(page: Page):
-    table = Table(
+    table = blocks.Table(
         table_width=2,
         children=[
-            TableRow(cells=["Cell 1", "Cell 2"]),
-            TableRow(cells=["Cell 3", "Cell 4"]),
+            blocks.TableRow(cells=["Cell 1", "Cell 2"]),
+            blocks.TableRow(cells=["Cell 3", "Cell 4"]),
         ],
     )
     page.append_children(table)
@@ -484,8 +490,13 @@ def test_getting_parent(page):
     2. A page is a child of another page.
     to_do: Add database parent as soon as database support is added.
     """
-    assert page.parent == {"type": "workspace", "workspace": True}
-    assert page.children[4].parent == {"page_id": TEST_NOTION_PAGE, "type": "page_id"}
+    page_parent = page.parent
+    child_parent = page.children[4].parent
+
+    assert isinstance(page_parent, ParentWorkspace)
+    assert page_parent.to_json() == {"type": "workspace", "workspace": True}
+    assert isinstance(child_parent, ParentPage)
+    assert child_parent.to_json() == {"page_id": TEST_NOTION_PAGE, "type": "page_id"}
 
 
 def test_deleting_all_children(page):
