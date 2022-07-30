@@ -12,8 +12,24 @@ API_VERSION = "2022-02-22"
 
 
 class NotionClient:
-    def __init__(self, token: str):
+    """A client class that handles communication with the Notion API.
+    
+    Parameters:
+        token: The secret of a given Notion integration.
+        timeout, proxies, verify: See https://requests.readthedocs.io/en/latest/api/
+    """
+    def __init__(
+        self,
+        token: str,
+        timeout: Optional[Union[float, tuple]] = None,
+        proxies: Optional[dict] = None,
+        verify: Union[bool, str] = True,
+    ):
         self.token = token
+
+        self.timeout = timeout
+        self.proxies = proxies
+        self.verify = verify
 
     def _make_request(self, request_type: str, entity, payload=None) -> dict:
         url = f"{API_BASE_URL}{entity}/"
@@ -32,6 +48,9 @@ class NotionClient:
             url,
             headers=headers,
             json=payload,
+            timeout=self.timeout,
+            proxies=self.proxies,
+            verify=self.verify,
         )
         if response.status_code != 200:
             raise ValueError(response.text)
