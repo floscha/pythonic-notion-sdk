@@ -186,7 +186,7 @@ class NotionClient:
         sort: dict = None,
         filter: Optional[dict] = None,
         limit: Optional[int] = None,
-    ) -> Page:
+    ) -> List[Page]:
         "Search for Notion pages in all workspaces and databases."
         payload = {"query": query}
         if sort:
