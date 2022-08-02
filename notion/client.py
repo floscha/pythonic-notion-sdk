@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 
+from notion.model.common.types import JSON
 from notion.model.common.utils import UUIDv4
 from notion.model.databases.database import Database
 from notion.model.filters import Filter
@@ -13,11 +14,12 @@ API_VERSION = "2022-02-22"
 
 class NotionClient:
     """A client class that handles communication with the Notion API.
-    
+
     Parameters:
         token: The secret of a given Notion integration.
         timeout, proxies, verify: See https://requests.readthedocs.io/en/latest/api/
     """
+
     def __init__(
         self,
         token: str,
@@ -31,7 +33,7 @@ class NotionClient:
         self.proxies = proxies
         self.verify = verify
 
-    def _make_request(self, request_type: str, entity, payload=None) -> dict:
+    def _make_request(self, request_type: str, entity, payload=None) -> JSON:
         url = f"{API_BASE_URL}{entity}/"
 
         headers = {
