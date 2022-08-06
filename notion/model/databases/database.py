@@ -8,7 +8,7 @@ from notion.model.filters import Filter
 from notion.model.page import Page
 
 
-def foo_bar(property_class):
+def property_class_to_str_or_dict(property_class):
     if isinstance(property_class, type):
         class_name = {
             props.Title: "title",
@@ -54,11 +54,11 @@ class Database(NotionObjectBase):
             self.cover = cover
         if properties:
             for property_name, property_class in properties.items():
-                foo = foo_bar(property_class)
-                if foo is None:
+                property_class_repr = property_class_to_str_or_dict(property_class)
+                if property_class_repr is None:
                     print(f"Property type {property_class!r} is not supported (yet).")
                     continue
-                self._data["properties"][property_name] = foo
+                self._data["properties"][property_name] = property_class_repr
         if parent:
             self.parent = parent
 
