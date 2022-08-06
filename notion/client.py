@@ -33,7 +33,9 @@ class NotionClient:
         self.proxies = proxies
         self.verify = verify
 
-    def _make_request(self, request_type: str, entity, payload=None) -> JSON:
+    def _make_request(
+        self, request_type: str, entity, payload=None, params=None
+    ) -> JSON:
         url = f"{API_BASE_URL}{entity}/"
 
         headers = {
@@ -50,6 +52,7 @@ class NotionClient:
             url,
             headers=headers,
             json=payload,
+            params=params,
             timeout=self.timeout,
             proxies=self.proxies,
             verify=self.verify,
@@ -64,6 +67,7 @@ class NotionClient:
         request_type: str,
         entity: str,
         payload: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, Any]] = None,
         limit: Optional[int] = None,
     ) -> List[dict]:
         if payload is None:
@@ -74,7 +78,7 @@ class NotionClient:
         has_more = True
         while has_more and (not limit or len(results) < limit):
             result_set = self._make_request(
-                request_type, entity, {**payload, **start_cursor}
+                request_type, entity, payload={**payload, **start_cursor}, params=params
             )
             results.extend(result_set["results"])
             start_cursor = {"start_cursor": result_set.get("next_cursor")}
@@ -129,22 +133,23 @@ class NotionClient:
     # Pages
     # ---------------------------------------------------------------------------
 
-    def get_page(self, page_id):
+    def get_page(self, page_id) -> Page:
         "Get a single Notion page by its ID."
-        data = self._make_request("get", f"pages/{page_id}")
-        return Page(client=self, data=data)
+        response = self._make_request("get", f"pages/{page_id}")
+        return Page(data=response).with_client(self)
 
     def create_page(self, page: Union[Page, dict]) -> Page:
         "Create a new Notion page."
         page_data = page.to_json() if isinstance(page, Page) else page
         response = self._make_request("post", "pages", page_data)
-        return response
+        return Page(data=response).with_client(self)
 
-    def update_page(self, page_id, payload: dict):
+    def update_page(self, page_id, payload: dict) -> Page:
         "Update properties of an existing Notion page."
-        return self._make_request("patch", f"pages/{page_id}", payload)
+        response = self._make_request("patch", f"pages/{page_id}", payload)
+        return Page(data=response).with_client(self)
 
-    def delete_page(self, page_id):
+    def delete_page(self, page_id) -> Page:
         """Deletes the Notion Page with the given ID.
 
         The Notion API does not offer a DELETE method but insteads works by setting the `archived` field.
