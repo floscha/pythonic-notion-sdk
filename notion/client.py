@@ -90,14 +90,14 @@ class NotionClient:
     # Databases
     # ---------------------------------------------------------------------------
 
-    def get_database(self, database_id) -> Database:
+    def get_database(self, database_id: Union[UUIDv4, str]) -> Database:
         "Get a single Notion database by its ID."
         data = self._make_request("get", f"databases/{database_id}")
         return Database.from_json(data).with_client(self)
 
     def query_database(
         self,
-        database_id,
+        database_id: Union[UUIDv4, str],
         filter_: Optional[Union[Filter, dict]] = None,
         sort: Optional[dict] = None,
     ) -> List[Page]:
@@ -110,7 +110,7 @@ class NotionClient:
         )
         return [Page.from_json(page_data).with_client(self) for page_data in data]
 
-    def create_database(self, database: Database, parent_id: Optional[UUIDv4] = None):
+    def create_database(self, database: Database, parent_id: Optional[Union[UUIDv4, str]] = None):
         "Create a new Notion database."
         if parent_id:
             database._data["parent"] = {"type": "page_id", "page_id": parent_id}
@@ -118,11 +118,11 @@ class NotionClient:
         database._data = response
         database._client = self
 
-    def update_database(self, database_id, payload: dict) -> dict:
+    def update_database(self, database_id: Union[UUIDv4, str], payload: dict) -> dict:
         "Update properties of an existing Notion database."
         return self._make_request("patch", f"databases/{database_id}", payload)
 
-    def delete_database(self, page_id):
+    def delete_database(self, page_id: Union[UUIDv4, str]):
         """Deletes the Notion Page with the given ID.
 
         The Notion API does not offer a DELETE method but insteads works by setting the `archived` field.
@@ -133,7 +133,7 @@ class NotionClient:
     # Pages
     # ---------------------------------------------------------------------------
 
-    def get_page(self, page_id) -> Page:
+    def get_page(self, page_id: Union[UUIDv4, str]) -> Page:
         "Get a single Notion page by its ID."
         response = self._make_request("get", f"pages/{page_id}")
         return Page(data=response).with_client(self)
@@ -144,12 +144,12 @@ class NotionClient:
         response = self._make_request("post", "pages", page_data)
         return Page(data=response).with_client(self)
 
-    def update_page(self, page_id, payload: dict) -> Page:
+    def update_page(self, page_id: Union[UUIDv4, str], payload: dict) -> Page:
         "Update properties of an existing Notion page."
         response = self._make_request("patch", f"pages/{page_id}", payload)
         return Page(data=response).with_client(self)
 
-    def delete_page(self, page_id) -> Page:
+    def delete_page(self, page_id: Union[UUIDv4, str]) -> Page:
         """Deletes the Notion Page with the given ID.
 
         The Notion API does not offer a DELETE method but insteads works by setting the `archived` field.
@@ -160,21 +160,21 @@ class NotionClient:
     # Blocks
     # ---------------------------------------------------------------------------
 
-    def update_block(self, block_id, payload: dict):
+    def update_block(self, block_id: Union[UUIDv4, str], payload: dict):
         "Update properties of an existing Notion page."
         return self._make_request("patch", f"blocks/{block_id}", payload)
 
-    def retrieve_block_children(self, block_id: str, limit: Optional[int] = None):
+    def retrieve_block_children(self, block_id: Union[UUIDv4, str], limit: Optional[int] = None):
         "Retrieve children of a given block."
         return self._make_request("get", f"blocks/{block_id}/children")
 
-    def append_block_children(self, block_id: str, children: str):
+    def append_block_children(self, block_id: Union[UUIDv4, str], children: str):
         "Append children blocks to an existing block"
         return self._make_request(
             "patch", f"blocks/{block_id}/children", {"children": children}
         )
 
-    def delete_block(self, block_id: str):
+    def delete_block(self, block_id: Union[UUIDv4, str]):
         """Deletes the Notion Block with the given ID.
 
         The Notion API does not offer a DELETE method but insteads works by setting the `archived` field.
