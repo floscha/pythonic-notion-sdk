@@ -285,7 +285,7 @@ class ChildPage(Child):
         Needs to be overwritten to use the `delete_page` endpoint instead of `delete_block`.
         """
         deletion_result = self._client.delete_page(self.id)
-        self._data["archived"] = deletion_result["archived"]
+        self._data["archived"] = deletion_result.archived
 
 
 class ChildDatabase(Child):
