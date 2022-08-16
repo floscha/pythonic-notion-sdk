@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 
+from notion.model.comment import Comment
 from notion.model.common.types import JSON
 from notion.model.common.utils import UUIDv4
 from notion.model.databases.database import Database
@@ -110,7 +111,9 @@ class NotionClient:
         )
         return [Page.from_json(page_data).with_client(self) for page_data in data]
 
-    def create_database(self, database: Database, parent_id: Optional[Union[UUIDv4, str]] = None):
+    def create_database(
+        self, database: Database, parent_id: Optional[Union[UUIDv4, str]] = None
+    ):
         "Create a new Notion database."
         if parent_id:
             database._data["parent"] = {"type": "page_id", "page_id": parent_id}
@@ -164,7 +167,9 @@ class NotionClient:
         "Update properties of an existing Notion page."
         return self._make_request("patch", f"blocks/{block_id}", payload)
 
-    def retrieve_block_children(self, block_id: Union[UUIDv4, str], limit: Optional[int] = None):
+    def retrieve_block_children(
+        self, block_id: Union[UUIDv4, str], limit: Optional[int] = None
+    ):
         "Retrieve children of a given block."
         return self._make_request("get", f"blocks/{block_id}/children")
 
@@ -180,6 +185,28 @@ class NotionClient:
         The Notion API does not offer a DELETE method but insteads works by setting the `archived` field.
         """
         return self.update_block(block_id, {"archived": True})
+
+    # ---------------------------------------------------------------------------
+    # Comments
+    # ---------------------------------------------------------------------------
+
+    def get_comments(self, block_id: Union[UUIDv4, str]) -> List[Comment]:
+        data = self._paginate("get", "comments", params={"block_id": block_id})
+        return [
+            Comment.from_json(comment_data).with_client(self) for comment_data in data
+        ]
+
+    def create_comment(self, comment: Comment) -> Comment:
+        self._make_request(
+            "post",
+            "comments",
+            payload=comment.to_json(),
+        )
+
+    def delete_comment(self, comment_id: Union[UUIDv4, str]):
+        raise NotImplementedError(
+            "The Notion API does not allow deleting comments (yet)."
+        )
 
     # ---------------------------------------------------------------------------
     # Search
