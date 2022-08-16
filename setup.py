@@ -1,5 +1,4 @@
-from setuptools import setup
-
+from setuptools import find_packages, setup
 
 setup(
     name="pythonic-notion-sdk",
@@ -8,6 +7,6 @@ setup(
     author="Florian Schaefer",
     author_email="florian.schaefer@gmail.com",
     license="MIT",
-    packages=["notion"],
+    packages=find_packages(exclude=["tests"]),
     install_requires=["requests==2.28.0"],
 )
