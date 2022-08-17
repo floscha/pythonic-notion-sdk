@@ -1,18 +1,40 @@
+from abc import ABC
 from datetime import datetime
-from typing import Union
+from typing import Any, Generic, TypeVar, Union, cast
 
-from notion.model.common.parent import Parent, ParentPage
+from notion.model.common.parent import (
+    Parent,
+    ParentDatabase,
+    ParentPage,
+    ParentWorkspace,
+)
 from notion.model.common.utils import parse_notion_datetime
 
 
-class NotionObjectBase:
+class BaseMixin(ABC):
+    _client: Any
+    _data: Any
+
+    @property
+    def type(self):
+        raise NotImplementedError
+
+    @property
+    def id(self):
+        raise NotImplementedError
+
+
+T = TypeVar("T")
+
+
+class NotionObjectBase(Generic[T]):
     def __init__(self, data=None, client=None):
         self._data = data
         self._client = client
 
-    def with_client(self, client) -> "NotionObjectBase":
+    def with_client(self, client) -> T:
         self._client = client
-        return self
+        return cast(T, self)
 
     @property
     def object(self) -> str:
@@ -27,7 +49,7 @@ class NotionObjectBase:
         return self._data["id"]
 
     @property
-    def parent(self) -> Parent:
+    def parent(self) -> Union[ParentWorkspace, ParentPage, ParentDatabase, None]:
         return Parent.from_json(self._data)
 
     @parent.setter

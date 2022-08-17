@@ -20,6 +20,7 @@ class Parent:
         self.type = type_
         self.id = id_
 
+    @staticmethod
     def from_json(
         data: dict,
     ) -> Union["ParentWorkspace", "ParentPage", "ParentDatabase", None]:

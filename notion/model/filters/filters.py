@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
+from typing import Generic, List, Optional, TypeVar, Union
 
 from notion.model.common.utils import UUIDv4, class_name_as_snake_case
 from notion.model.filters.conditions import (
@@ -33,8 +33,13 @@ from notion.model.filters.conditions import (
 # ---------------------------------------------------------------------------
 
 
-class Filter(ABC):
-    def __init__(self, target: str, condition: Optional[Union["Filter", List]] = None):
+T = TypeVar("T")
+
+
+class Filter(ABC, Generic[T]):
+    def __init__(
+        self, target: str, condition: Optional[Union["Filter", "Condition"]] = None
+    ):
         self.target = target
         self.condition = condition
 
@@ -65,8 +70,18 @@ class Compound(Filter):
     Docs: https://developers.notion.com/reference/post-database-query-filter#compound-filter-object
     """
 
+    def __init__(self, target: str, conditions: List[Filter]):
+        self.target = target
+        self.conditions = conditions
+
+    @property
+    def condition(self):
+        raise TypeError(
+            "Compound Filters cannot use the `condition` property. Use `conditions` instead."
+        )
+
     def to_json(self) -> dict:
-        return {self.target: [con.to_json() for con in self.condition]}
+        return {self.target: [con.to_json() for con in self.conditions]}
 
 
 def And(filters: List[Filter]):
@@ -167,6 +182,9 @@ class Number(PropertyFilter):
         return self.with_condition(IsNotEmpty())
 
     def to_json(self) -> dict:
+        if self.condition is None:
+            raise TypeError("A condition has to be set before `to_json()` can be used.")
+
         return {"property": self.target, "number": self.condition.to_json()}
 
 
@@ -204,7 +222,7 @@ class Select(PropertyFilter):
         "Only return pages where the page property value is empty."
         return self.with_condition(IsEmpty())
 
-    def is_not_empty(self) -> dict:
+    def is_not_empty(self):
         "Only return pages where the page property value is present."
         return self.with_condition(IsNotEmpty())
 
@@ -215,19 +233,19 @@ class MultiSelect(PropertyFilter):
     Docs: https://developers.notion.com/reference/post-database-query-filter#multi-select-filter-condition
     """
 
-    def contains(self, string: str) -> "MultiSelect":
+    def contains(self, string: str):
         "Only return pages where the page property value contains the provided value."
         return self.with_condition(Contains(string))
 
-    def does_not_contain(self, string: str) -> "MultiSelect":
+    def does_not_contain(self, string: str):
         "Only return pages where the page property value does not contain the provided value."
         return self.with_condition(DoesNotContain(string))
 
-    def is_empty(self) -> "MultiSelect":
+    def is_empty(self):
         "Only return pages where the page property value is empty."
         return self.with_condition(IsEmpty())
 
-    def is_not_empty(self) -> "MultiSelect":
+    def is_not_empty(self):
         "Only return pages where the page property value is present."
         return self.with_condition(IsNotEmpty())
 
@@ -400,7 +418,7 @@ class Rollup(Filter):
 
     def __init__(
         self, filter_: Union[Number, Date], array_condition: Optional[str] = None
-    ) -> Filter:
+    ):
         super().__init__(filter_.target, filter_.condition)
 
         self.filter_name = class_name_as_snake_case(filter_)
@@ -410,24 +428,27 @@ class Rollup(Filter):
         self.array_condition = array_condition
 
     @staticmethod
-    def any(filter_: Filter) -> "Rollup":
+    def any(filter_: Union[Number, Date]) -> "Rollup":
         """For a rollup property which evaluates to an array, return the pages where any item in that rollup fits this criterion.
         The criterion itself can be any other property type."""
         return Rollup(filter_, "any")
 
     @staticmethod
-    def every(filter_: Filter) -> "Rollup":
+    def every(filter_: Union[Number, Date]) -> "Rollup":
         """For a rollup property which evaluates to an array, return the pages where every item in that rollup fits this criterion.
         The criterion itself can be any other property type."""
         return Rollup(filter_, "every")
 
     @staticmethod
-    def none(filter_: Filter) -> "Rollup":
+    def none(filter_: Union[Number, Date]) -> "Rollup":
         """For a rollup property which evaluates to an array, return the pages where no item in that rollup fits this criterion.
         The criterion itself can be any other property type."""
         return Rollup(filter_, "none")
 
     def to_json(self) -> dict:
+        if self.condition is None:
+            raise TypeError("A condition has to be set before `to_json()` can be used.")
+
         if self.array_condition:
             return {
                 "property": self.target,
@@ -454,9 +475,12 @@ class Formula(Filter):
     Docs: https://developers.notion.com/reference/post-database-query-filter#formula-filter-condition
     """
 
-    def __init__(self, filter_: Filter) -> Filter:
+    def __init__(self, filter_: Filter):
         super().__init__(filter_.target, filter_.condition)
         self.filter_name = class_name_as_snake_case(filter_)
 
     def to_json(self) -> dict:
+        if self.condition is None:
+            raise TypeError("A condition has to be set before `to_json()` can be used.")
+
         return {"property": self.target, self.filter_name: self.condition.to_json()}

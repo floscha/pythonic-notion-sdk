@@ -74,13 +74,15 @@ class NotionClient:
         if payload is None:
             payload = {}
 
-        results = []
-        start_cursor = {}
+        results: List[dict] = []
+        start_cursor: Dict[str, Any] = {}
         has_more = True
         while has_more and (not limit or len(results) < limit):
             result_set = self._make_request(
                 request_type, entity, payload={**payload, **start_cursor}, params=params
             )
+            assert isinstance(result_set, dict)
+
             results.extend(result_set["results"])
             start_cursor = {"start_cursor": result_set.get("next_cursor")}
             has_more = result_set.get("has_more", False)
@@ -94,6 +96,7 @@ class NotionClient:
     def get_database(self, database_id: Union[UUIDv4, str]) -> Database:
         "Get a single Notion database by its ID."
         data = self._make_request("get", f"databases/{database_id}")
+        assert isinstance(data, dict)
         return Database.from_json(data).with_client(self)
 
     def query_database(
@@ -121,9 +124,13 @@ class NotionClient:
         database._data = response
         database._client = self
 
-    def update_database(self, database_id: Union[UUIDv4, str], payload: dict) -> dict:
+    def update_database(
+        self, database_id: Union[UUIDv4, str], payload: dict
+    ) -> Database:
         "Update properties of an existing Notion database."
-        return self._make_request("patch", f"databases/{database_id}", payload)
+        data = self._make_request("patch", f"databases/{database_id}", payload)
+        assert isinstance(data, dict)
+        return Database.from_json(data).with_client(self)
 
     def delete_database(self, page_id: Union[UUIDv4, str]):
         """Deletes the Notion Page with the given ID.
@@ -197,11 +204,12 @@ class NotionClient:
         ]
 
     def create_comment(self, comment: Comment) -> Comment:
-        self._make_request(
+        data = self._make_request(
             "post",
             "comments",
             payload=comment.to_json(),
         )
+        return Comment.from_json(data)
 
     def delete_comment(self, comment_id: Union[UUIDv4, str]):
         raise NotImplementedError(
@@ -220,11 +228,12 @@ class NotionClient:
         limit: Optional[int] = None,
     ) -> List[Page]:
         "Search for Notion pages in all workspaces and databases."
-        payload = {"query": query}
+        payload = {}  # type: Dict[str, Any]
+        payload["query"] = query
         if sort:
             payload["sort"] = sort
         if filter:
             payload["filter"] = filter
 
-        results = self._paginate("post", "search", payload, limit)
+        results = self._paginate("post", "search", payload, limit=limit)
         return [Page.from_json(page_data).with_client(self) for page_data in results]

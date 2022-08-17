@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Optional, Union
 
 import notion.model.databases.properties as props
+from notion.model.common.emoji import Emoji
+from notion.model.common.file import File
 from notion.model.common.notion_object_base import NotionObjectBase
 from notion.model.common.parent import ParentDatabase, ParentPage
 from notion.model.databases.properties import Cover, Icon, Title
@@ -23,7 +25,7 @@ def property_class_to_str_or_dict(property_class):
         return property_class.to_json()
 
 
-class Database(NotionObjectBase):
+class Database(NotionObjectBase["Database"]):
     """Notion Database
 
     Params:
@@ -47,11 +49,11 @@ class Database(NotionObjectBase):
             },
         }
         if title:
-            self.title = title
+            self.title = title  # type: ignore
         if icon:
-            self.icon = icon
+            self.icon = icon  # type: ignore
         if cover:
-            self.cover = cover
+            self.cover = cover  # type: ignore
         if properties:
             for property_name, property_class in properties.items():
                 property_class_repr = property_class_to_str_or_dict(property_class)
@@ -60,7 +62,7 @@ class Database(NotionObjectBase):
                     continue
                 self._data["properties"][property_name] = property_class_repr
         if parent:
-            self.parent = parent
+            self.parent = parent  # type: ignore
 
         super().__init__(self._data, None)
 
@@ -122,11 +124,11 @@ class Database(NotionObjectBase):
             self._data = new_data
 
     @property
-    def icon(self) -> Icon:
+    def icon(self) -> Union[Emoji, File]:
         return Icon.from_json(self._data)
 
     @icon.setter
-    def icon(self, new_icon: Union[Icon, str]):
+    def icon(self, new_icon: Union[Emoji, File, str]):
         if isinstance(new_icon, str):
             new_icon = Icon.from_str(new_icon)
 

@@ -1,11 +1,11 @@
 from typing import Dict, Optional, Union
 
 from notion.model.block import ChildrenMixin
-from notion.model.common.notion_object_base import NotionObjectBase
+from notion.model.common.notion_object_base import BaseMixin, NotionObjectBase
 from notion.model.databases.properties import Property
 
 
-def find_title_property_name(page: "Page") -> str:
+def find_title_property_name(page: "TitleMixin") -> Union[str, None]:
     """Find the name of the title property for a page.
 
     While every page must have exactly one title, its name can be changed.
@@ -14,8 +14,10 @@ def find_title_property_name(page: "Page") -> str:
         if property_dict["type"] == "title":
             return property_name
 
+    return None
 
-class TitleMixin:
+
+class TitleMixin(BaseMixin):
     @property
     def title(self) -> str:
         title_property_name = find_title_property_name(self)

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Union
@@ -5,10 +6,13 @@ from typing import List, Optional, Union
 from notion.model.common.emoji import Emoji
 from notion.model.common.file import File
 from notion.model.common.rich_text import RichText
+from notion.model.common.types import JSON
 
 
 class Property:
-    pass
+    @abstractmethod
+    def to_json(self):
+        raise NotImplementedError
 
 
 class Title(Property):
@@ -32,7 +36,7 @@ class Title(Property):
     def from_json(data: dict) -> "Title":
         return Title(data["title"][0]["text"]["content"])
 
-    def to_json(self) -> dict:
+    def to_json(self) -> List[dict]:
         return [self.text.to_json()]
 
     def __str__(self) -> str:
@@ -65,6 +69,12 @@ class Cover:
     def __init__(self, url: str, type_: str = "external"):
         self.url = url
         self.type = type_
+
+    @staticmethod
+    def from_json(data: JSON) -> "Cover":
+        assert isinstance(data, dict)
+        type_ = data["type"]
+        return Cover(type_, data[type_]["url"])
 
     def to_json(self) -> dict:
         return {"type": self.type, self.type: {"url": self.url}}

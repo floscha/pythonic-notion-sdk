@@ -4,7 +4,8 @@ class RichText:
 
     @staticmethod
     def from_json(data: dict) -> "RichText":
-        return RichText(data)
+        text = data["text"]["content"]
+        return RichText(text)
 
     def to_json(self) -> dict:
         return {

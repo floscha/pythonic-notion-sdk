@@ -1,6 +1,7 @@
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Type, Union
 
-from notion.model.common.notion_object_base import NotionObjectBase
+from notion.model.common.notion_object_base import BaseMixin, NotionObjectBase
+from notion.model.common.parent import ParentDatabase, ParentPage, ParentWorkspace
 from notion.model.common.utils import UUIDv4
 
 # ---------------------------------------------------------------------------
@@ -73,7 +74,7 @@ def type_name_from_object(object) -> str:
     return type_name
 
 
-def block_class_from_type_name(type_name: str) -> Block:
+def block_class_from_type_name(type_name: str) -> Type[Block]:
     type_class = {
         "child_page": ChildPage,
         "child_database": ChildDatabase,
@@ -118,7 +119,7 @@ def block_class_from_type_name(type_name: str) -> Block:
 # ---------------------------------------------------------------------------
 
 
-class ChildrenMixin:
+class ChildrenMixin(BaseMixin):
     @property
     def children(self) -> list:
         return [
@@ -126,7 +127,7 @@ class ChildrenMixin:
             for data in self._client.retrieve_block_children(self.id)["results"]
         ]
 
-    def append_children(self, children: Union[dict, List[dict]]) -> List[dict]:
+    def append_children(self, children) -> List[dict]:
         """Append blocks or pages to a parent.
 
         TODO: Instead of appending items one by one, batch blocks to be more efficient.
@@ -164,7 +165,7 @@ class ChildrenMixin:
         super().delete()
 
 
-class RichTextMixin:
+class RichTextMixin(BaseMixin):
     @property
     def text(self) -> str:
         return self._data[self.type]["rich_text"][0]["text"]["content"]
@@ -177,7 +178,7 @@ class RichTextMixin:
         self._data = new_data
 
 
-class ColorMixin:
+class ColorMixin(BaseMixin):
     @property
     def color(self) -> str:
         return self._data[self.type]["color"]
@@ -188,20 +189,20 @@ class ColorMixin:
         self._data = new_data
 
 
-class UrlMixin:
+class UrlMixin(BaseMixin):
     @property
     def url(self) -> str:
         return self._data[self.type]["url"]
 
     @url.setter
-    def url(self, new_url: str) -> str:
+    def url(self, new_url: str):
         new_data = self._client.update_block(self.id, {self.type: {"url": new_url}})
         self._data = new_data
 
 
-class CaptionMixin:
+class CaptionMixin(BaseMixin):
     @property
-    def caption(self) -> str:
+    def caption(self) -> Union[str, None]:
         caption_data = self._data[self.type]["caption"]
         if not caption_data:
             return None
@@ -216,7 +217,7 @@ class CaptionMixin:
         self._data = new_data
 
 
-class IconMixin:
+class IconMixin(BaseMixin):
     @property
     def icon(self) -> Optional[str]:
         "TODO: Implement setter"
@@ -236,13 +237,13 @@ class IconMixin:
         self._data = new_data
 
 
-class ExternalFileMixin:
+class ExternalFileMixin(BaseMixin):
     @property
     def url(self) -> str:
         return self._data[self.type]["external"]["url"]
 
     @url.setter
-    def url(self, new_url: str) -> str:
+    def url(self, new_url: str):
         new_data = self._client.update_block(
             self.id, {self.type: {"external": {"url": new_url}}}
         )
@@ -261,8 +262,8 @@ class Child(Block):
     def title(self) -> str:
         return self._data[self.type]["title"]
 
-    @property
-    def parent(self):
+    @property  # type: ignore
+    def parent(self) -> Union[ParentWorkspace, ParentDatabase, ParentPage, None]:
         """Get the parent of the page.
 
         Since the ChildPage data itself does not contain the `parent` property, the full page must be retrieved first.
@@ -487,7 +488,7 @@ class Code(RichText, CaptionMixin):
         return self._data[self.type]["language"]
 
     @language.setter
-    def language(self, new_language: str) -> str:
+    def language(self, new_language: str):
         Code._check_language_is_valid(new_language)
 
         new_data = self._client.update_block(
@@ -754,7 +755,7 @@ class Equation(Block):
         return self._data[self.type]["expression"]
 
     @expression.setter
-    def expression(self, new_expression: str) -> str:
+    def expression(self, new_expression: str):
         new_data = self._client.update_block(
             self.id, {self.type: {"expression": new_expression}}
         )
@@ -825,7 +826,7 @@ class LinkPreview(Block, UrlMixin):
     def __init__(self, data: dict = None, client=None):
         super().__init__(data=data, client=client)
 
-    @UrlMixin.url.setter
+    @UrlMixin.url.setter  # type: ignore
     def url(self, new_url):
         raise TypeError(
             "LinkPreview blocks will only be returned as part of a response. It cannot be created via the API."
@@ -949,7 +950,7 @@ class SyncedBlock(Block, ChildrenMixin):
         else:
             return None
 
-    def append_children(self, children: Union[dict, List[dict]]):
+    def append_children(self, children):
         if self.synced_from is not None:
             raise TypeError("Only Original SyncedBlocks can hold children.")
         return super().append_children(children)
@@ -998,7 +999,10 @@ class ColumnList(Block, ChildrenMixin):
             }
         super().__init__(data=data, client=client)
 
-    def append_children(self, children: Union[dict, List[dict]]):
+    def append_children(self, children):
+        if not isinstance(children, Iterable):
+            children = [children]
+
         if not all(isinstance(child, Column) for child in children):
             raise TypeError("ColumnLists can only have Column objects as children.")
         return super().append_children(children)
