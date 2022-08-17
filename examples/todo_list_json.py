@@ -3,7 +3,6 @@ from os import environ
 import requests
 from pydotenvs import load_env
 
-
 load_env()
 TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]
 TEST_NOTION_PAGE = environ["TEST_NOTION_PAGE"]

@@ -1,4 +1,36 @@
-from notion.model.block import *
+from notion.model.block import (
+    PDF,
+    Bookmark,
+    Breadcrumb,
+    BulletedListItem,
+    Callout,
+    ChildDatabase,
+    ChildPage,
+    Code,
+    Column,
+    ColumnList,
+    Divider,
+    Embed,
+    Equation,
+    File,
+    HeadingOne,
+    HeadingThree,
+    HeadingTwo,
+    Image,
+    LinkPreview,
+    LinkToPage,
+    NumberedListItem,
+    Paragraph,
+    Quote,
+    SyncedBlock,
+    Table,
+    TableOfContents,
+    TableRow,
+    Template,
+    ToDo,
+    Toggle,
+    Video,
+)
 
 
 def test_all_blocks_are_implemented():

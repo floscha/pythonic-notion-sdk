@@ -16,7 +16,7 @@ notion = NotionClient("secret_token")
 
 ```python
 page = client.get_page("some-page-id")
-print(page.title)    
+print(page.title)
 ```
 
 ### Edit some property of a Page

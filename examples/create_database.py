@@ -7,7 +7,6 @@ from notion import NotionClient
 from notion.model.databases import Database
 from notion.model.databases import properties as props
 
-
 load_env()
 TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]
 TEST_NOTION_PAGE = environ["TEST_NOTION_PAGE"]

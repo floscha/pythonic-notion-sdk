@@ -2,7 +2,31 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 from notion.model.common.utils import UUIDv4, class_name_as_snake_case
-from notion.model.filters.conditions import *
+from notion.model.filters.conditions import (
+    After,
+    Before,
+    Condition,
+    Contains,
+    DoesNotContain,
+    DoesNotEqual,
+    EndsWith,
+    Equals,
+    GreaterThan,
+    GreaterThanOrEqualTo,
+    IsEmpty,
+    IsNotEmpty,
+    LessThan,
+    LessThanOrEqualTo,
+    NextMonth,
+    NextWeek,
+    NextYear,
+    OnOrAfter,
+    OnOrBefore,
+    PastMonth,
+    PastWeek,
+    PastYear,
+    StartsWith,
+)
 
 # ---------------------------------------------------------------------------
 # Filter Base Class

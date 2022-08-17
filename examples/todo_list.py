@@ -8,7 +8,6 @@ from notion.model import filters
 from notion.model.databases.database import Database
 from notion.model.page import Page
 
-
 load_env()
 TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]
 TEST_NOTION_PAGE = environ["TEST_NOTION_PAGE"]
