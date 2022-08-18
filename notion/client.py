@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 
+from notion.api import UserEndpoint
 from notion.model.comment import Comment
 from notion.model.common.types import JSON
 from notion.model.common.utils import UUIDv4
@@ -33,6 +34,9 @@ class NotionClient:
         self.timeout = timeout
         self.proxies = proxies
         self.verify = verify
+
+        # API Endpoints
+        self.users = UserEndpoint(self)
 
     def _make_request(
         self, request_type: str, entity, payload=None, params=None
