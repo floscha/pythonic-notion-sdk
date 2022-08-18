@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
 
 import notion.model.databases.properties as props
+from notion.logger import logger
 from notion.model.common.emoji import Emoji
 from notion.model.common.file import File
 from notion.model.common.notion_object_base import NotionObjectBase
@@ -58,7 +59,9 @@ class Database(NotionObjectBase["Database"]):
             for property_name, property_class in properties.items():
                 property_class_repr = property_class_to_str_or_dict(property_class)
                 if property_class_repr is None:
-                    print(f"Property type {property_class!r} is not supported (yet).")
+                    logger.warn(
+                        f"Property type {property_class!r} is not supported (yet)."
+                    )
                     continue
                 self._data["properties"][property_name] = property_class_repr
         if parent:
