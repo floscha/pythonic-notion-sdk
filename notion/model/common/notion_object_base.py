@@ -1,6 +1,6 @@
 from abc import ABC
 from datetime import datetime
-from typing import Any, Generic, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
 
 from notion.model.common.parent import (
     Parent,
@@ -9,6 +9,9 @@ from notion.model.common.parent import (
     ParentWorkspace,
 )
 from notion.model.common.utils import parse_notion_datetime
+
+if TYPE_CHECKING:
+    from notion.api.client import NotionClient
 
 
 class BaseMixin(ABC):
@@ -28,11 +31,15 @@ T = TypeVar("T")
 
 
 class NotionObjectBase(Generic[T]):
-    def __init__(self, data=None, client=None):
+    def __init__(
+        self,
+        data=None,
+        client=None,
+    ):
         self._data = data
         self._client = client
 
-    def with_client(self, client) -> T:
+    def with_client(self, client: "NotionClient") -> T:
         self._client = client
         return cast(T, self)
 

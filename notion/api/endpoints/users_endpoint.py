@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING, List
 from notion.model.users import Bot, User
 
 if TYPE_CHECKING:
-    from notion.client import NotionClient
+    from notion.api.client import NotionClient
 
 
-class UserEndpoint:
+class UsersEndpoint:
     def __init__(self, client: "NotionClient"):
         self._client = client
 

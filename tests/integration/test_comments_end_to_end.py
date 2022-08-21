@@ -18,8 +18,8 @@ def client() -> NotionClient:
 
 
 @fixture
-def page(client) -> Page:
-    return client.get_page(TEST_NOTION_PAGE)
+def page(client: NotionClient) -> Page:
+    return client.pages.get(TEST_NOTION_PAGE)
 
 
 def test_comments(page: Page):
@@ -27,9 +27,9 @@ def test_comments(page: Page):
     comment_test_page = page.children[0]
 
     test_comment = Comment(comment_test_page.id, "Test Comment")
-    page._client.create_comment(test_comment)
+    page._client.comments.create(test_comment)
 
-    comments = page._client.get_comments(comment_test_page.id)
+    comments = page._client.comments.get(comment_test_page.id)
     assert len(comments) == 1
     assert comments[0].text == "Test Comment"
 

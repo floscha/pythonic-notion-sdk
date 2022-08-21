@@ -17,13 +17,13 @@ TEST_NOTION_PAGE = environ["TEST_NOTION_PAGE"]
 
 
 @fixture
-def client():
+def client() -> NotionClient:
     return NotionClient(TEST_NOTION_TOKEN)
 
 
 @fixture
-def page(client):
-    return client.get_page(TEST_NOTION_PAGE)
+def page(client: NotionClient) -> Page:
+    return client.pages.get(TEST_NOTION_PAGE)
 
 
 def test_creating_client(client):
@@ -59,7 +59,7 @@ def test_page_has_correct_properties(page):
     assert page.url == f"https://www.notion.so/{page.title}-{page.id.replace('-', '')}"
 
 
-def test_page_has_no_children(page):
+def test_page_has_no_children(page: Page):
     "At the beginning of the integration tests, the page should have no children."
     assert page.children == []
 

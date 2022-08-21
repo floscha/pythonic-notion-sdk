@@ -19,7 +19,7 @@ class Block(NotionObjectBase):
         return self._data["has_children"]
 
     def delete(self):
-        self._data = self._client.delete_block(self.id)
+        self._data = self._client.blocks.delete(self.id)
 
     def to_json(self) -> dict:
         res = self._data.copy()
@@ -124,7 +124,7 @@ class ChildrenMixin(BaseMixin):
     def children(self) -> list:
         return [
             block_class_from_type_name(data["type"])(client=self._client, data=data)
-            for data in self._client.retrieve_block_children(self.id)["results"]
+            for data in self._client.blocks.retrieve_children(self.id)["results"]
         ]
 
     def append_children(self, children) -> List[dict]:
@@ -139,7 +139,7 @@ class ChildrenMixin(BaseMixin):
         for child in children:
             object_name = child._data["object"]
             if object_name == "block":
-                append_results = self._client.append_block_children(
+                append_results = self._client.blocks.append_children(
                     self.id, [child.to_json()]
                 )
                 new_block = append_results["results"][0]
@@ -149,7 +149,7 @@ class ChildrenMixin(BaseMixin):
             elif object_name == "page":
                 # TODO Also support database_id
                 child._data["parent"] = {"type": "page_id", "page_id": self.id}
-                res.append(self._client.create_page(child._data))
+                res.append(self._client.pages.create(child._data))
             else:
                 raise TypeError(
                     f"Appending objects of type {object_name} is not supported."
@@ -172,7 +172,7 @@ class RichTextMixin(BaseMixin):
 
     @text.setter
     def text(self, new_text: str):
-        new_data = self._client.update_block(
+        new_data = self._client.blocks.update(
             self.id, {self.type: {"rich_text": [{"text": {"content": new_text}}]}}
         )
         self._data = new_data
@@ -185,7 +185,9 @@ class ColorMixin(BaseMixin):
 
     @color.setter
     def color(self, new_color: str):
-        new_data = self._client.update_block(self.id, {self.type: {"color": new_color}})
+        new_data = self._client.blocks.update(
+            self.id, {self.type: {"color": new_color}}
+        )
         self._data = new_data
 
 
@@ -196,7 +198,7 @@ class UrlMixin(BaseMixin):
 
     @url.setter
     def url(self, new_url: str):
-        new_data = self._client.update_block(self.id, {self.type: {"url": new_url}})
+        new_data = self._client.blocks.update(self.id, {self.type: {"url": new_url}})
         self._data = new_data
 
 
@@ -211,7 +213,7 @@ class CaptionMixin(BaseMixin):
 
     @caption.setter
     def caption(self, new_caption: str):
-        new_data = self._client.update_block(
+        new_data = self._client.blocks.update(
             self.id, {self.type: {"caption": [{"text": {"content": new_caption}}]}}
         )
         self._data = new_data
@@ -231,7 +233,7 @@ class IconMixin(BaseMixin):
 
     @icon.setter
     def icon(self, new_icon: str):
-        new_data = self._client.update_block(
+        new_data = self._client.blocks.update(
             self.id, {self.type: {"icon": {"emoji": new_icon}}}
         )
         self._data = new_data
@@ -244,7 +246,7 @@ class ExternalFileMixin(BaseMixin):
 
     @url.setter
     def url(self, new_url: str):
-        new_data = self._client.update_block(
+        new_data = self._client.blocks.update(
             self.id, {self.type: {"external": {"url": new_url}}}
         )
         self._data = new_data
@@ -268,7 +270,7 @@ class Child(Block):
 
         Since the ChildPage data itself does not contain the `parent` property, the full page must be retrieved first.
         """
-        full_page = self._client.get_page(self.id)
+        full_page = self._client.pages.get(self.id)
         return full_page.parent
 
 
@@ -285,7 +287,7 @@ class ChildPage(Child):
 
         Needs to be overwritten to use the `delete_page` endpoint instead of `delete_block`.
         """
-        deletion_result = self._client.delete_page(self.id)
+        deletion_result = self._client.pages.delete(self.id)
         self._data["archived"] = deletion_result.archived
 
 
@@ -297,7 +299,7 @@ class ChildDatabase(Child):
 
         Needs to be overwritten to use the `delete_database` endpoint instead of `delete_block`.
         """
-        deletion_result = self._client.delete_database(self.id)
+        deletion_result = self._client.databases.delete(self.id)
         self._data["archived"] = deletion_result["archived"]
 
 
@@ -491,7 +493,7 @@ class Code(RichText, CaptionMixin):
     def language(self, new_language: str):
         Code._check_language_is_valid(new_language)
 
-        new_data = self._client.update_block(
+        new_data = self._client.blocks.update(
             self.id, {self.type: {"language": new_language}}
         )
         self._data = new_data
@@ -618,7 +620,7 @@ class ToDo(Block, RichTextMixin, ColorMixin, ChildrenMixin):
 
     @checked.setter
     def checked(self, new_checked: bool):
-        new_data = self._client.update_block(
+        new_data = self._client.blocks.update(
             self.id, {self.type: {"checked": new_checked}}
         )
         self._data = new_data
@@ -756,7 +758,7 @@ class Equation(Block):
 
     @expression.setter
     def expression(self, new_expression: str):
-        new_data = self._client.update_block(
+        new_data = self._client.blocks.update(
             self.id, {self.type: {"expression": new_expression}}
         )
         self._data = new_data

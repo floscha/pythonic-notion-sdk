@@ -1,1 +1,3 @@
-from notion.client import NotionClient
+from notion.api.client import NotionClient
+
+__all__ = ["NotionClient"]
