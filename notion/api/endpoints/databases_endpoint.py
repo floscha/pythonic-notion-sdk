@@ -25,11 +25,16 @@ class DatabasesEndpoint:
         sort: Optional[dict] = None,
     ) -> list[Page]:
         "Query a Notion database for pages given some filter(s)."
-        filter_ = {
-            "filter": filter_.to_json() if isinstance(filter_, Filter) else filter_
-        }
+        if filter_:
+            filter_ = {
+                "filter": filter_.to_json() if isinstance(filter_, Filter) else filter_
+            }
+        else:
+            filter_ = {}
+        assert isinstance(filter_, dict)
+
         data = self._client._paginate(
-            "post", f"databases/{database_id}/query", {**filter_, **(sort or {})}
+            "post", f"databases/{database_id}/query", (filter_ | (sort or {}))
         )
         return [
             Page.from_json(page_data).with_client(self._client) for page_data in data

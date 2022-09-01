@@ -88,7 +88,7 @@ class Database(Block["Database"]):
         return self
 
     def query(
-        self, filter_: Union[Filter, dict], sort: Optional[dict] = None
+        self, filter_: Optional[Union[Filter, dict]] = None, sort: Optional[dict] = None
     ) -> List[Page]:
         """Query database for specific pages.
 
