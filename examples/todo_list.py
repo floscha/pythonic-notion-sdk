@@ -6,7 +6,7 @@ import notion.model.databases.properties as prop
 from notion import NotionClient
 from notion.model import filters
 from notion.model.databases.database import Database
-from notion.model.page import Page
+from notion.model.pages import Page
 
 load_env()
 TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]

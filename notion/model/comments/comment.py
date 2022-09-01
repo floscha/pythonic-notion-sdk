@@ -1,8 +1,10 @@
-from notion.model.common import NotionObjectBase
-from notion.model.common.types import JSON
+from notion.model.blocks import Block
+from notion.utils import JSON
 
 
-class Comment(NotionObjectBase):
+class Comment(Block["Comment"]):
+    type = "comment"
+
     def __init__(self, parent=None, text=None):
         self._data = {
             "parent": {"page_id": parent},
@@ -15,7 +17,7 @@ class Comment(NotionObjectBase):
         new_comment._data = data
         return new_comment
 
-    def to_json(self) -> JSON:
+    def to_json(self) -> dict:
         return self._data
 
     @property

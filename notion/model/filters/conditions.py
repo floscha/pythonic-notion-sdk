@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any
 
-from notion.model.common.utils import class_name_as_snake_case
+from notion.utils import class_name_as_snake_case
 
 
 class Condition:

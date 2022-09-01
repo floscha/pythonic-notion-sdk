@@ -34,4 +34,6 @@ class UsersEndpoint:
         Docs: https://developers.notion.com/reference/get-self
         """
         data = self._client._make_request("get", "users/me")
-        return Bot.from_json(data).with_client(self._client)
+        bot = Bot.from_json(data).with_client(self._client)
+        assert isinstance(bot, Bot)
+        return bot

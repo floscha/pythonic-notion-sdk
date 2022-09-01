@@ -1,2 +1,2 @@
 from notion.model.databases import Database
-from notion.model.page import Page
+from notion.model.pages import Page

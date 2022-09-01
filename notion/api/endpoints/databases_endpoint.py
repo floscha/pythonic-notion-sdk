@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Optional, Union
 
 from notion.model import Database, Page
-from notion.model.common.utils import UUIDv4
 from notion.model.filters import Filter
+from notion.model.properties.uuidv4 import UUIDv4
 
 if TYPE_CHECKING:
     from notion.api.client import NotionClient
@@ -36,14 +36,20 @@ class DatabasesEndpoint:
         ]
 
     def create(
-        self, database: Database, parent_id: Optional[Union[UUIDv4, str]] = None
+        self,
+        database: Database,
+        parent: Optional[Union[UUIDv4, str]] = None,
     ):
         "Create a new Notion database."
-        if parent_id:
-            database._data["parent"] = {"type": "page_id", "page_id": parent_id}
+        if parent:
+            database._data["parent"] = {"type": "page_id", "page_id": parent}
+
+        # Remove "type" key. Otherwise database creation will fail.
+        del database._data["type"]
+
         response = self._client._make_request("post", "databases", database._data)
         database._data = response
-        database._client = self
+        database._client = self._client
 
     def update(self, database_id: Union[UUIDv4, str], payload: dict) -> Database:
         "Update properties of an existing Notion database."

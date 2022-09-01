@@ -1,4 +1,4 @@
-from notion.model.block import (
+from notion.model.blocks import (
     PDF,
     Bookmark,
     Breadcrumb,

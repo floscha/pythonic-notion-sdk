@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 import requests
 
 from notion.api import endpoints
-from notion.model.common.types import JSON
+from notion.utils import JSON
 
 API_BASE_URL = "https://api.notion.com/v1/"
 API_VERSION = "2022-02-22"

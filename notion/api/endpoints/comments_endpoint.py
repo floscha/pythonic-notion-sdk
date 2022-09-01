@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Union
 
-from notion.model.comment import Comment
-from notion.model.common.utils import UUIDv4
+from notion.model.comments import Comment
+from notion.model.properties.uuidv4 import UUIDv4
 
 if TYPE_CHECKING:
     from notion.api.client import NotionClient

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic, List, Optional, TypeVar, Union
 
-from notion.model.common.utils import UUIDv4, class_name_as_snake_case
 from notion.model.filters.conditions import (
     After,
     Before,
@@ -27,6 +26,8 @@ from notion.model.filters.conditions import (
     PastYear,
     StartsWith,
 )
+from notion.model.properties.uuidv4 import UUIDv4
+from notion.utils import class_name_as_snake_case
 
 # ---------------------------------------------------------------------------
 # Filter Base Class

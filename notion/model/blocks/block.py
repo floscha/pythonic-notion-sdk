@@ -1,43 +1,40 @@
-from abc import ABC
+from abc import ABC, abstractproperty
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, Union, cast
 
-from notion.model.common.parent import (
+from notion.model.properties.parent import (
     Parent,
     ParentDatabase,
     ParentPage,
     ParentWorkspace,
 )
-from notion.model.common.utils import parse_notion_datetime
+from notion.utils import parse_notion_datetime
 
 if TYPE_CHECKING:
     from notion.api.client import NotionClient
 
-
-class BaseMixin(ABC):
-    _client: Any
-    _data: Any
-
-    @property
-    def type(self):
-        raise NotImplementedError
-
-    @property
-    def id(self):
-        raise NotImplementedError
-
-
 T = TypeVar("T")
 
 
-class NotionObjectBase(Generic[T]):
-    def __init__(
-        self,
-        data=None,
-        client=None,
-    ):
-        self._data = data
-        self._client = client
+class Block(Generic[T], ABC):
+    def __init__(self):
+        self._data = {"object": "block", "type": self.type, self.type: {}}
+        self._client = None
+
+    @classmethod
+    def from_json(cls, data: dict) -> T:
+        obj = cls.__new__(cls)
+        obj._data = data
+        return cast(T, obj)
+
+    def to_json(self) -> dict:
+        res = self._data.copy()
+        if self.type != "page" and "children" in res[self.type]:
+            res[self.type]["children"] = [
+                child.to_json() if isinstance(child, Block) else child
+                for child in res[self.type]["children"]
+            ]
+        return res
 
     def with_client(self, client: "NotionClient") -> T:
         self._client = client
@@ -89,3 +86,14 @@ class NotionObjectBase(Generic[T]):
     @property
     def archived(self) -> bool:
         return self._data["archived"]
+
+    @abstractproperty
+    def type(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def has_children(self) -> bool:
+        return self._data["has_children"]
+
+    def delete(self):
+        self._data = self._client.blocks.delete(self.id)

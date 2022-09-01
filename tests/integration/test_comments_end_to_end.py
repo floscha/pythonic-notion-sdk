@@ -4,8 +4,8 @@ from pydotenvs import load_env
 from pytest import fixture
 
 from notion import NotionClient
-from notion.model.comment import Comment
-from notion.model.page import Page
+from notion.model.comments import Comment
+from notion.model.pages import Page
 
 load_env()
 TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]

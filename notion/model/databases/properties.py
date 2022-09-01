@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Union
 
-from notion.model.common.emoji import Emoji
-from notion.model.common.file import File
-from notion.model.common.rich_text import RichText
-from notion.model.common.types import JSON
+from notion.model.properties.emoji import Emoji
+from notion.model.properties.file import File
+from notion.model.properties.rich_text import RichText
+from notion.utils import JSON
 
 
 class Property:

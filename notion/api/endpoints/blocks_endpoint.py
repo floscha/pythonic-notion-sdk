@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Union
 
-from notion.model.common.utils import UUIDv4
+from notion.model.blocks import Block
+from notion.model.properties.uuidv4 import UUIDv4
 
 if TYPE_CHECKING:
     from notion.api.client import NotionClient
@@ -16,12 +17,19 @@ class BlocksEndpoint:
 
     def retrieve_children(
         self, block_id: Union[UUIDv4, str], limit: Optional[int] = None
-    ):
+    ) -> list[dict]:
         "Retrieve children of a given block."
-        return self._client._make_request("get", f"blocks/{block_id}/children")
+        response = self._client._make_request("get", f"blocks/{block_id}/children")
+        assert isinstance(response, dict)
+        return response["results"]
 
-    def append_children(self, block_id: Union[UUIDv4, str], children: str):
+    def append_children(
+        self, block_id: Union[UUIDv4, str], children: list[Union[Block, dict]]
+    ):
         "Append children blocks to an existing block"
+        children = [
+            child.to_json() if isinstance(child, Block) else child for child in children
+        ]
         return self._client._make_request(
             "patch", f"blocks/{block_id}/children", {"children": children}
         )

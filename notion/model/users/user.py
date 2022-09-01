@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, TypeVar, Union
 
-from notion.model.common import NotionObjectBase
+from notion.model.blocks import Block
 
 if TYPE_CHECKING:
     from .bot import Bot
@@ -10,15 +10,13 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class User(NotionObjectBase[T]):
+class User(Block[T]):
     """Abstract Base Class for different User implementations.
 
     Docs: https://developers.notion.com/reference/user
     """
 
-    @property
-    def type(self) -> str:
-        return self._data["type"]
+    type = "user"
 
     @property
     def name(self) -> str:
@@ -32,15 +30,19 @@ class User(NotionObjectBase[T]):
         return f"{self.__class__.__name__}(name={self.name}, id={self.id})"
 
     @staticmethod
-    def from_json(data) -> Union["Bot", "Person"]:
+    def from_json(data) -> Union["Bot", "Person"]:  # type: ignore
         # Import at runtime to avoid circular imports.
         from notion.model.users import Bot, Person
 
         type_ = data.get("type")
         if type_ == "person":
-            return Person.from_json(data)
+            person = Person.__new__(Person)
+            person._data = data
+            return person
         elif type_ == "bot":
-            return Bot.from_json(data)
+            bot = Bot.__new__(Bot)
+            bot._data = data
+            return bot
         else:
             raise ValueError(
                 f"Type value of {type_} is (currently) not supported by Notion."

@@ -5,11 +5,11 @@ from pydotenvs import load_env
 from pytest import fixture
 
 from notion import NotionClient
-from notion.model import block as blocks
-from notion.model.common import is_valid_notion_id
-from notion.model.common.colors import Colors
-from notion.model.common.parent import ParentPage, ParentWorkspace
-from notion.model.page import Page
+from notion.model import blocks
+from notion.model.pages import Page
+from notion.model.properties.colors import Colors
+from notion.model.properties.parent import ParentPage, ParentWorkspace
+from notion.model.properties.uuidv4 import is_valid_notion_id
 
 load_env()
 TEST_NOTION_TOKEN = environ["TEST_NOTION_TOKEN"]
@@ -64,7 +64,7 @@ def test_page_has_no_children(page: Page):
     assert page.children == []
 
 
-def test_adding_children(page):
+def test_adding_children(page: Page):
     """Test adding various blocks and pages as children.
 
     Especially validate that adding a list of BOTH blocks and pages works, as the official API
@@ -82,18 +82,13 @@ def test_adding_children(page):
     )
 
     all_children = page.children
-    assert all_children[0].object == "block"
-    assert all_children[0].type == "heading_1"
-    assert all_children[1].object == "block"
-    assert all_children[1].type == "heading_2"
-    assert all_children[2].object == "block"
-    assert all_children[2].type == "heading_3"
-    assert all_children[3].object == "block"
-    assert all_children[3].type == "paragraph"
-    assert all_children[4].object == "block"
-    assert all_children[4].type == "child_page"
-    assert all_children[5].object == "block"
-    assert all_children[5].type == "quote"
+    for child, type_ in zip(
+        all_children,
+        ("heading_1", "heading_2", "heading_3", "paragraph", "child_page", "quote"),
+    ):
+        assert is_valid_notion_id(child.id)
+        assert child.object == "block"
+        assert child.type == type_
 
 
 def test_heading_1_block_has_correct_properties(page):
@@ -505,6 +500,5 @@ def test_deleting_all_children(page):
     for child in all_children:
         child.delete()
 
-    # assert len([child for child in all_children if child.archived == True ]) == len(all_children)
     assert all(child.archived for child in all_children)
     assert len(page.children) == 0

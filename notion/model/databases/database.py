@@ -1,14 +1,17 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import notion.model.databases.properties as props
 from notion.logger import logger
-from notion.model.common.emoji import Emoji
-from notion.model.common.file import File
-from notion.model.common.notion_object_base import NotionObjectBase
-from notion.model.common.parent import ParentDatabase, ParentPage
+from notion.model.blocks import Block
 from notion.model.databases.properties import Cover, Icon, Title
 from notion.model.filters import Filter
-from notion.model.page import Page
+from notion.model.pages import Page
+from notion.model.properties.emoji import Emoji
+from notion.model.properties.file import File
+from notion.model.properties.parent import ParentDatabase, ParentPage
+
+if TYPE_CHECKING:
+    from notion.api.client import NotionClient
 
 
 def property_class_to_str_or_dict(property_class):
@@ -26,12 +29,14 @@ def property_class_to_str_or_dict(property_class):
         return property_class.to_json()
 
 
-class Database(NotionObjectBase["Database"]):
+class Database(Block["Database"]):
     """Notion Database
 
     Params:
         title (optional): If not provided, Notion will set the title to `Untitled`.
     """
+
+    type = "database"
 
     def __init__(
         self,
@@ -41,9 +46,12 @@ class Database(NotionObjectBase["Database"]):
         properties: Optional[Dict[str, Any]] = None,
         parent: Optional[Union[ParentPage, str]] = None,
     ):
-        self._client = None
+        super().__init__()
 
-        self._data = {
+        # Database needs no "database" property.
+        del self._data["database"]
+
+        self._data |= {
             "object": "database",
             "properties": {
                 "Name": {"title": {}},
@@ -67,16 +75,8 @@ class Database(NotionObjectBase["Database"]):
         if parent:
             self.parent = parent  # type: ignore
 
-        super().__init__(self._data, None)
-
-    @staticmethod
-    def from_json(data: dict) -> "Database":
-        new_database = Database()
-        new_database._data = data
-        return new_database
-
-    def create(self, client, parent: str = None) -> "Database":
-        client.create_database(self, parent)
+    def create(self, client: "NotionClient", parent: str = None) -> "Database":
+        client.databases.create(self, parent)
         self._client = client
         return self
 
@@ -84,7 +84,7 @@ class Database(NotionObjectBase["Database"]):
         if page.parent:
             raise Exception("Page parent is already set.")
         page.parent = ParentDatabase(self.id)
-        self._client.create_page(page)
+        self._client.pages.create(page)
         return self
 
     def query(
@@ -98,7 +98,7 @@ class Database(NotionObjectBase["Database"]):
             raise Exception(
                 "Database has not been created. Run `your_database.create(...)` first."
             )
-        return self._client.query_database(self.id, filter_, sort)
+        return self._client.databases.query(self.id, filter_, sort)
 
     def delete(self):
         if self._client is None:
@@ -106,7 +106,7 @@ class Database(NotionObjectBase["Database"]):
                 "Database has not been created in Notion yet and therefore cannot be deleted."
             )
         else:
-            new_data = self._client.delete_database(self.id)
+            new_data = self._client.databases.delete(self.id)
             self._data = new_data
 
     @property
@@ -121,7 +121,7 @@ class Database(NotionObjectBase["Database"]):
         if self._client is None:
             self._data["title"] = new_title.to_json()
         else:
-            new_data = self._client.update_database(
+            new_data = self._client.databases.update(
                 self.id, {"title": new_title.to_json()}
             )
             self._data = new_data
@@ -138,7 +138,7 @@ class Database(NotionObjectBase["Database"]):
         if self._client is None:
             self._data["icon"] = new_icon.to_json()
         else:
-            new_data = self._client.update_database(
+            new_data = self._client.databases.update(
                 self.id, {"icon": new_icon.to_json()}
             )
             self._data = new_data
@@ -155,7 +155,7 @@ class Database(NotionObjectBase["Database"]):
         if self._client is None:
             self._data["cover"] = new_cover.to_json()
         else:
-            new_data = self._client.update_database(
+            new_data = self._client.databases.update(
                 self.id, {"cover": new_cover.to_json()}
             )
             self._data = new_data

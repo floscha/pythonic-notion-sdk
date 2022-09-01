@@ -4,8 +4,8 @@ from pydotenvs import load_env
 from pytest import fixture
 
 from notion import NotionClient
-from notion.model.common import is_valid_notion_id
-from notion.model.page import Page
+from notion.model.pages import Page
+from notion.model.properties.uuidv4 import is_valid_notion_id
 from notion.model.users import Bot, Person, User
 
 load_env()

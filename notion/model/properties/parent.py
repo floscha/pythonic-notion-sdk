@@ -1,6 +1,6 @@
 from typing import Union
 
-from notion.model.common.utils import UUIDv4
+from notion.model.properties.uuidv4 import UUIDv4
 
 
 class Parent:
