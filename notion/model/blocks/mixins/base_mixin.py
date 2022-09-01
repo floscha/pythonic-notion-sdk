@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    pass
+    from notion.api.client import NotionClient
 
 
 class BaseMixin:
     id: Any
-    type: Any
-    _data: Any
-    _client: Any
+    type: str
+    _data: dict
+    _client: "NotionClient"
     "Base class for all other mixins that defines which properties should generally be available."
     # @property
     # def id(self) -> str:
