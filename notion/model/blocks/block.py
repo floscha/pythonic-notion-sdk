@@ -2,6 +2,7 @@ from abc import ABC, abstractproperty
 from datetime import datetime
 from typing import TYPE_CHECKING, Generic, TypeVar, Union, cast
 
+from notion.logger import logger
 from notion.model.properties.parent import (
     Parent,
     ParentDatabase,
@@ -60,8 +61,12 @@ class Block(Generic[T], ABC):
     def parent(self, new_parent: Union[ParentPage, str]):
         if isinstance(new_parent, str):
             new_parent = ParentPage(new_parent)
-
         self._data["parent"] = new_parent.to_json()
+
+        if self._client:
+            logger.warning(
+                "Changes to the `parent` property can currently not be updated using the Notion API."
+            )
 
     @property
     def created_time(self) -> datetime:
