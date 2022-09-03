@@ -114,6 +114,26 @@ def test_heading_1_block_has_correct_properties(page):
     assert heading_1_block.has_children == False
 
 
+def test_toggleable_heading_blocks(page: Page):
+    headings = [
+        blocks.HeadingOne("Non-toggleable Heading 1"),
+        blocks.HeadingTwo("Non-toggleable Heading 2"),
+        blocks.HeadingThree("Non-toggleable Heading 3"),
+    ]
+    page.append_children(headings)
+
+    for current_heading in headings:
+        assert current_heading.is_toggleable == False
+
+    for current_heading in headings:
+        current_heading.is_toggleable = True
+        assert current_heading.is_toggleable == True
+
+    for current_heading in headings:
+        current_heading.delete()
+        assert current_heading.archived == True
+
+
 def test_callout_block(page):
     callout = blocks.Callout(
         "Some Text", "⭐", Colors.green, children=[blocks.Quote("Some Quote")]
