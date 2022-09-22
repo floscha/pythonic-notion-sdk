@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Union
 
 from notion.model.blocks import Block
+from notion.model.blocks.mixins.children_mixin import block_class_from_type_name
 from notion.model.properties.uuidv4 import UUIDv4
 
 if TYPE_CHECKING:
@@ -10,6 +11,16 @@ if TYPE_CHECKING:
 class BlocksEndpoint:
     def __init__(self, client: "NotionClient"):
         self._client = client
+
+    def get(self, block_id: Union[UUIDv4, str]) -> Block:
+        "Get a single Notion block by its ID."
+        block_data = self._client._make_request("get", f"blocks/{block_id}")
+        assert isinstance(block_data, dict)
+        return (
+            block_class_from_type_name(block_data["type"])
+            .from_json(block_data)
+            .with_client(self._client)
+        )
 
     def update(self, block_id: Union[UUIDv4, str], payload: dict):
         "Update properties of an existing Notion page."
