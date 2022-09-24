@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Union
 
 from notion.model.blocks import Block
+from notion.model.blocks.child_page import ChildPage
 from notion.model.blocks.mixins import ChildrenMixin, TitleMixin
 from notion.model.databases.properties import Property
 
@@ -50,6 +51,16 @@ class Page(Block["Page"], ChildrenMixin, TitleMixin):
     @property
     def url(self) -> str:
         return self._data["url"]
+
+    @property
+    def has_children(self) -> bool:
+        raise TypeError(
+            """The `has_children` property is not supported by `Page` objects.
+        Instead turn this page into a `Block` object with `page_block = my_page.as_block()`"""
+        )
+
+    def as_block(self) -> ChildPage:
+        return self._client.blocks.get(self.id)
 
     def delete(self):
         if self._client is None:

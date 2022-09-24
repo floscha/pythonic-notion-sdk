@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from .child import Child
+
+if TYPE_CHECKING:
+    from notion.model.pages.page import Page
 
 
 class ChildPage(Child["ChildPage"]):
@@ -10,6 +15,9 @@ class ChildPage(Child["ChildPage"]):
     """
 
     type = "child_page"
+
+    def as_page(self) -> "Page":
+        return self._client.pages.get(self.id)
 
     def delete(self):
         """Delete the `ChildPage` in Notion.
