@@ -135,8 +135,18 @@ class Number:
         return {"number": {"format": self.format}}
 
 
-class Date(datetime):
-    pass
+class Date:
+    def __init__(self, start: datetime, end: Optional[datetime] = None):
+        self.start = start
+        self.end = end
+
+    def to_json(self):
+        return {
+            "date": {
+                "start": self.start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end": self.end.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+        }
 
 
 @dataclass
