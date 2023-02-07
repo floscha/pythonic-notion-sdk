@@ -8,5 +8,5 @@ setup(
     author_email="florian.schaefer@gmail.com",
     license="MIT",
     packages=find_packages(exclude=["tests"]),
-    install_requires=["requests==2.28.0"],
+    install_requires=["requests==2.28.2", "pydotenvs==0.2.0"],
 )
