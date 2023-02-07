@@ -8,7 +8,8 @@ def test_heading_1_internal_data():
         "object": "block",
         "type": "heading_1",
         "heading_1": {
-            "rich_text": [{"type": "text", "text": {"content": "Test Heading"}}]
+            "is_toggleable": False,
+            "rich_text": [{"type": "text", "text": {"content": "Test Heading"}}],
         },
     }
 
@@ -20,7 +21,8 @@ def test_heading_2_internal_data():
         "object": "block",
         "type": "heading_2",
         "heading_2": {
-            "rich_text": [{"type": "text", "text": {"content": "Test Heading"}}]
+            "is_toggleable": False,
+            "rich_text": [{"type": "text", "text": {"content": "Test Heading"}}],
         },
     }
 
@@ -32,6 +34,7 @@ def test_heading_3_internal_data():
         "object": "block",
         "type": "heading_3",
         "heading_3": {
-            "rich_text": [{"type": "text", "text": {"content": "Test Heading"}}]
+            "is_toggleable": False,
+            "rich_text": [{"type": "text", "text": {"content": "Test Heading"}}],
         },
     }
