@@ -1,6 +1,8 @@
+from os import environ
 from typing import Any, Dict, List, Optional, Union
 
 import requests
+from pydotenvs import load_env
 
 from notion.api import endpoints
 from notion.utils import JSON
@@ -37,6 +39,19 @@ class NotionClient:
         self.pages = endpoints.PagesEndpoint(self)
         self.search = endpoints.SearchEndpoint(self)
         self.users = endpoints.UsersEndpoint(self)
+
+    @staticmethod
+    def from_env(
+        env_variable: str = "NOTION_TOKEN",
+        timeout: Optional[Union[float, tuple]] = None,
+        proxies: Optional[dict] = None,
+        verify: Union[bool, str] = True,
+    ) -> "NotionClient":
+        "Initializes a new `NotionClient` from a token stored in an environment variable."
+        load_env()
+        token = environ[env_variable]
+
+        return NotionClient(token, timeout, proxies, verify)
 
     def _make_request(
         self, request_type: str, entity, payload=None, params=None
