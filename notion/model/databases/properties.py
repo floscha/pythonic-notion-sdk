@@ -46,7 +46,7 @@ class Title(Property):
         return str(self)
 
 
-class Icon:
+class Icon(Property):
     @staticmethod
     def from_str(icon: str) -> Union[Emoji, File]:
         if len(icon) == 1:  # Very simple heuristic to check if `icon` is an emoji.
@@ -65,7 +65,7 @@ class Icon:
             raise ValueError(f"Icon type {icon_type!r} is not supported.")
 
 
-class Cover:
+class Cover(Property):
     def __init__(self, url: str, type_: str = "external"):
         self.url = url
         self.type = type_
@@ -103,7 +103,7 @@ SUPPORTED_COLORS = (
 
 
 @dataclass
-class SelectOption:
+class SelectOption(Property):
     name: str
     color: str
 
@@ -116,7 +116,7 @@ class SelectOption:
 
 
 @dataclass
-class Select:
+class Select(Property):
     options: List[SelectOption]
 
     def to_json(self):
@@ -124,10 +124,11 @@ class Select:
 
 
 class MultiSelect(Select):
+    # TODO: Implement
     pass
 
 
-class Number:
+class Number(Property):
     def __init__(self, format: str):
         self.format = format
 
@@ -135,7 +136,7 @@ class Number:
         return {"number": {"format": self.format}}
 
 
-class Date:
+class Date(Property):
     def __init__(self, start: datetime, end: Optional[datetime] = None):
         self.start = start
         self.end = end
@@ -150,7 +151,7 @@ class Date:
 
 
 @dataclass
-class Relation:
+class Relation(Property):
     database_id: str
     type: str  # Can be "single_property" or "dual_property"
 
@@ -159,7 +160,7 @@ class Relation:
 
 
 @dataclass
-class Rollup:
+class Rollup(Property):
     """.
 
     Params:
@@ -182,9 +183,11 @@ class Rollup:
         }
 
 
-class People:
+class People(Property):
+    # TODO: Implement
     pass
 
 
-class Files:
+class Files(Property):
+    # TODO: Implement
     pass
