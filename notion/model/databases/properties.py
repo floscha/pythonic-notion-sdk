@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional, Union
 
 from notion.model.properties.emoji import Emoji
@@ -137,15 +137,27 @@ class Number(Property):
 
 
 class Date(Property):
-    def __init__(self, start: datetime, end: Optional[datetime] = None):
+    def __init__(
+        self, start: Union[date, datetime], end: Optional[Union[date, datetime]] = None
+    ):
         self.start = start
         self.end = end
+
+    @staticmethod
+    def _format_datetime(dt: Union[date, datetime]) -> str:
+        # Important to check for datetime first because isinstance(datetime_obj, date) = True
+        if isinstance(dt, datetime):
+            return dt.strftime("%Y-%m-%dT%H:%M:%S")
+        elif isinstance(dt, date):
+            return dt.strftime("%Y-%m-%d")
+        else:
+            raise TypeError(f"Datetime of type {type(dt)} is not supported.")
 
     def to_json(self):
         return {
             "date": {
-                "start": self.start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end": self.end.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "start": self._format_datetime(self.start),
+                "end": self._format_datetime(self.end) if self.end else None,
             }
         }
 
