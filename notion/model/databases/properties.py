@@ -129,11 +129,11 @@ class MultiSelect(Select):
 
 
 class Number(Property):
-    def __init__(self, format: str):
-        self.format = format
+    def __init__(self, number: int):
+        self.number = number
 
     def to_json(self):
-        return {"number": {"format": self.format}}
+        return {"number": self.number}
 
 
 class Date(Property):
