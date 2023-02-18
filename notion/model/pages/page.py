@@ -3,7 +3,7 @@ from typing import Dict, Optional, Union
 from notion.model.blocks import Block
 from notion.model.blocks.child_page import ChildPage
 from notion.model.blocks.mixins import ChildrenMixin, TitleMixin
-from notion.model.databases.properties import Property
+from notion.model.databases.properties import File, Property
 
 
 class Page(Block["Page"], ChildrenMixin, TitleMixin):
@@ -38,6 +38,16 @@ class Page(Block["Page"], ChildrenMixin, TitleMixin):
 
     @property
     def icon(self) -> Optional[dict]:
+        return self._data["icon"]
+
+    @icon.setter
+    def icon(self, new_icon: File) -> Optional[dict]:
+        if self._client is None:
+            raise Exception()
+
+        self._data["icon"] = new_icon.to_json()
+        self._client.pages.update(self.id, {"icon": self._data["icon"]})
+
         return self._data["icon"]
 
     @property
