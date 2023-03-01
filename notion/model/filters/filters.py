@@ -143,6 +143,41 @@ class Text(PropertyFilter):
         "Only return pages where the page property value is present."
         return self.with_condition(IsNotEmpty())
 
+    def to_json(self) -> dict:
+        assert self.condition
+        return {"property": self.target, "rich_text": self.condition.to_json()}
+
+
+class Title(Text):
+    def to_json(self) -> dict:
+        assert self.condition
+        return {"property": self.target, "title": self.condition.to_json()}
+
+
+class URL(Text):
+    def __init__(
+        self,
+        target: str = "URL",
+        condition: Optional[Union["Filter", "Condition"]] = None,
+    ):
+        super().__init__(target, condition)
+
+    def to_json(self) -> dict:
+        assert self.condition
+        return {"property": self.target, "url": self.condition.to_json()}
+
+
+class Email(Text):
+    def to_json(self) -> dict:
+        assert self.condition
+        return {"property": self.target, "email": self.condition.to_json()}
+
+
+class PhoneNumber(Text):
+    def to_json(self) -> dict:
+        assert self.condition
+        return {"property": self.target, "phone_number": self.condition.to_json()}
+
 
 class Number(PropertyFilter):
     """A number filter condition can be applied to database properties of type `Number`.
@@ -183,9 +218,7 @@ class Number(PropertyFilter):
         return self.with_condition(IsNotEmpty())
 
     def to_json(self) -> dict:
-        if self.condition is None:
-            raise TypeError("A condition has to be set before `to_json()` can be used.")
-
+        assert self.condition
         return {"property": self.target, "number": self.condition.to_json()}
 
 
@@ -202,6 +235,7 @@ class Checkbox(PropertyFilter):
         return self.with_condition(DoesNotEqual(checked))
 
     def to_json(self):
+        assert self.condition
         return {"property": self.target, "checkbox": self.condition.to_json()}
 
 
@@ -226,6 +260,10 @@ class Select(PropertyFilter):
     def is_not_empty(self):
         "Only return pages where the page property value is present."
         return self.with_condition(IsNotEmpty())
+
+    def to_json(self):
+        assert self.condition
+        return {"property": self.target, "select": self.condition.to_json()}
 
 
 class MultiSelect(PropertyFilter):
@@ -337,6 +375,7 @@ class Timestamp(Date):
             raise ValueError(f"Timestamp property {self.property!r} is not supported.")
 
     def to_json(self):
+        assert self.condition
         return {"timestamp": self.target, self.target: self.condition.to_json()}
 
 
