@@ -23,6 +23,7 @@ class DatabasesEndpoint:
         database_id: Union[UUIDv4, str],
         filter_: Optional[Union[Filter, dict]] = None,
         sort: Optional[dict] = None,
+        limit: Optional[int] = None,
     ) -> list[Page]:
         "Query a Notion database for pages given some filter(s)."
         if filter_:
@@ -34,7 +35,10 @@ class DatabasesEndpoint:
         assert isinstance(filter_, dict)
 
         data = self._client._paginate(
-            "post", f"databases/{database_id}/query", (filter_ | (sort or {}))
+            "post",
+            f"databases/{database_id}/query",
+            (filter_ | (sort or {})),
+            limit=limit,
         )
         return [
             Page.from_json(page_data).with_client(self._client) for page_data in data
