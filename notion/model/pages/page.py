@@ -58,9 +58,22 @@ class Page(Block["Page"], ChildrenMixin, TitleMixin):
     def properties(self) -> dict:
         return self._data["properties"]
 
+    def __getitem__(self, key: str):
+        return self.properties[key]
+
+    def __setitem__(self, key: str, value: Property):
+        if not isinstance(value, Property):
+            raise TypeError("Only values of type `Property` can be assigned.")
+        self.properties[key] = value.to_json()
+
+        if self._client:
+            update_payload = {"properties": {key: value.to_json()}}
+            self._client.pages.update(self.id, update_payload)
+        else:
+            pass  # TODO: Raise warning
+
     @property
     def url(self) -> str:
-        "The URL of the Notion page itself. Not to be confused with a `URL` property the page might contain."
         return self._data["url"]
 
     @property
