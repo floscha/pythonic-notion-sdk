@@ -60,6 +60,7 @@ class Page(Block["Page"], ChildrenMixin, TitleMixin):
 
     @property
     def url(self) -> str:
+        "The URL of the Notion page itself. Not to be confused with a `URL` property the page might contain."
         return self._data["url"]
 
     @property
